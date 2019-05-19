@@ -1,0 +1,15 @@
+{
+  "name": "ptree",
+  "version": "1.0.0",
+  "description": "Deep object walking, manipulation and validation",
+  "main": "dist/index.js",
+  "scripts": {
+    "watch": "tsc -w -p tsconfig.json",
+    "test": "node test/"
+  },
+  "author": "dotvirus",
+  "license": "ISC",
+  "files": [
+    "dist/"
+  ]
+}
