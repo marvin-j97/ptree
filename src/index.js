@@ -30,6 +30,11 @@ function equalArrays(a, b) {
 
 const PTree = function (_root) {
 
+  if (typeof _root !== "object") {
+    console.log("PTree: Constructor received atomic root")
+    return null;
+  }
+
   this._root = _root;
 
   // Get value at path
@@ -165,13 +170,13 @@ const PTree = function (_root) {
 
   // Compare
   this.equal = function (other) {
-    const otherTree = new PTree(other);
-    if (typeof this._root !== typeof otherTree._root)
+    if (typeof this._root !== typeof other)
       return false;
+
+    const otherTree = new PTree(other);
 
     const keys = this.keys();
     const otherKeys = otherTree.keys();
-
 
     if (!equalArrays(keys, otherKeys))
       return false;
@@ -187,6 +192,27 @@ const PTree = function (_root) {
     return this.keys().find(k => {
       return finder(this.get(k));
     });
+  }
+
+  // Maps all keys to new values (returns new object/array)
+  this.map = function (mapper) {
+    const keys = this.keys();
+    let mapped;
+
+    if (Array.isArray(this._root)) {
+      mapped = [];
+    } else if (typeof this._root === "object") {
+      mapped = {};
+    }
+
+    let p = new PTree(mapped);
+
+    keys.forEach(key => {
+      let value = this.get(key);
+      p.set(key, mapper(value));
+    });
+
+    return mapped;
   }
 
   // Validate object integrity
@@ -217,7 +243,7 @@ const PTree = function (_root) {
       }
 
       if (prop.rules) {
-        for(const rule of prop.rules) {
+        for (const rule of prop.rules) {
           if (!rule(value))
             return false;
         }
@@ -228,6 +254,6 @@ const PTree = function (_root) {
   }
 }
 
-module.exports = function(_root) {
+module.exports = function (_root) {
   return new PTree(_root);
 };

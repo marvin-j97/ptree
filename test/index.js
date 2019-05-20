@@ -28,7 +28,6 @@ const obj = {
   b: 3
 };
 compare(new $p(obj).get(""), obj);
-compare(new $p(5).get(""), 5);
 compare(new $p(obj).get("a.thisdoesnotexist"), undefined);
 compare(new $p([
   [
@@ -358,3 +357,32 @@ compare(new $p([1, 2, 3, 4]).validate([{
 }]), false);
 
 compare(new $p([1, 2, 3, 4]).get([1]), 2);
+
+compareArrays(new $p([1, 2, 3, 4]).map(i => i * i), [1, 4, 9, 16]);
+compare(new $p(new $p({
+  a: 2,
+  b: {
+    c: 3,
+    d: 4
+  }
+}).map(i => i * i)).equal({
+  a: 4,
+  b: {
+    c: 9,
+    d: 16
+  }
+}), true);
+
+compare(new $p(new $p({
+  a: 2,
+  b: {
+    c: 3,
+    d: [1, 2, 3]
+  }
+}).map(i => i * i)).equal({
+  a: 4,
+  b: {
+    c: 9,
+    d: [1, 4, 9]
+  }
+}), true);

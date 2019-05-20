@@ -11,6 +11,7 @@ declare class PTree {
   flatten(): any;
   equal(other: any): boolean;
   findKey(finder: (v: any) => boolean): string | undefined;
+  map(mapper: (v: any) => any): any;
   validate(props: { path: string | (string | (string | (() => (string | number)) | number)[]), optional?: boolean, rules?: ((v: any) => boolean)[] }): boolean;
 }
 
