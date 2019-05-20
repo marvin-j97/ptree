@@ -1,4 +1,4 @@
-let $p = require("../src/index");
+let $p = require("../src/");
 
 function compare(actual, expected) {
   console.log(actual === expected ? 'Test passed.' : `${actual} differed from expected value: ${expected}`);
@@ -9,19 +9,17 @@ function compareArrays(actual, expected) {
   console.log((sameLength && actual.every((v, i) => v === expected[i])) ? 'Test passed.' : `Array ${actual} differed from expected array ${expected}`);
 }
 
-compare($p.get([1, 2, 3, 4], "0"), 1);
-
-compare($p.get({
+compare(new $p([1, 2, 3, 4]).get("0"), 1);
+compare(new $p({
   value: 3
-}, "value"), 3);
-
+}).get("value"), 3);
 compare(
-  $p.get({
+  new $p({
     values: [
       "1",
       "2"
     ]
-  }, "values.0"),
+  }).get("values.0"),
   "1"
 );
 
@@ -29,17 +27,17 @@ const obj = {
   a: 2,
   b: 3
 };
-compare($p.get(obj, ""), obj);
-compare($p.get(5, ""), 5);
-compare($p.get(obj, "a.thisdoesnotexist"), undefined);
-compare($p.get([
+compare(new $p(obj).get(""), obj);
+compare(new $p(5).get(""), 5);
+compare(new $p(obj).get("a.thisdoesnotexist"), undefined);
+compare(new $p([
   [
     1, 2, 3
   ],
   [
     4, 5, 6
   ]
-], "0.0"), 1);
+]).get("0.0"), 1);
 
 const obj2 = {
   a: {
@@ -53,44 +51,44 @@ const obj2 = {
   }
 };
 
-compare($p.get(obj2, [
+compare(new $p(obj2).get([
   "a", "c"
 ]), 2);
 
-compare($p.get(obj2, [
+compare(new $p(obj2).get([
   "b", "e", () => Math.max(0, 1)
 ]), 5);
 
-compare($p.get(obj2, [
+compare(new $p(obj2).get([
   "b", "e", "0"
 ]), 4);
 
-compare($p.get(obj2, [
+compare(new $p(obj2).get([
   "b", "e", 2
 ]), 6);
 
-compareArrays($p.keys([1, 2, 3, 4, 5]), ["0", "1", "2", "3", "4"]);
-compareArrays($p.keys([
+compareArrays(new $p(obj).keys(), ["a", "b"]);
+compareArrays(new $p([1, 2, 3, 4, 5]).keys(), ["0", "1", "2", "3", "4"]);
+compareArrays(new $p([
   [0, 1], 2, 3, 4, 5
-]), ["0.0", "0.1", "1", "2", "3", "4"]);
+]).keys(), ["0.0", "0.1", "1", "2", "3", "4"]);
 
-compareArrays($p.keys({
+compareArrays(new $p({
   a: 0,
   b: 1,
   c: 2
-}), ["a", "b", "c"]);
+}).keys(), ["a", "b", "c"]);
 
-compareArrays($p.keys(obj2), ["a.c", "a.d", "b.e.0", "b.e.1", "b.e.2", "b.e.3"]);
-
-compareArrays($p.keys(obj2).map(k => $p.get(obj2, k)), [2, 3, 4, 5, 6, 7]);
+compareArrays(new $p(obj2).keys(), ["a.c", "a.d", "b.e.0", "b.e.1", "b.e.2", "b.e.3"]);
+compareArrays(new $p(obj2).keys().map(k => new $p(obj2).get(k)), [2, 3, 4, 5, 6, 7]);
 
 let obj3 = {
   a: 2
 }
 
-compare($p.get(obj3, "a"), 2);
-$p.set(obj3, "a", 3);
-compare($p.get(obj3, "a"), 3);
+compare(new $p(obj3).get("a"), 2);
+new $p(obj3).set("a", 3);
+compare(new $p(obj3).get("a"), 3);
 
 let obj4 = {
   a: {
@@ -99,28 +97,28 @@ let obj4 = {
   }
 }
 
-compare($p.get(obj4, "a.a"), 1);
-$p.set(obj4, "a.a", 3);
-compare($p.get(obj4, "a.a"), 3);
+compare(new $p(obj4).get("a.a"), 1);
+new $p(obj4).set("a.a", 3);
+compare(new $p(obj4).get("a.a"), 3);
 
 let obj5 = [1, 2, 3, 4, 5];
 
-compare($p.get(obj5, "0"), 1);
-$p.set(obj5, "0", 10);
-compare($p.get(obj5, "0"), 10);
+compare(new $p(obj5).get("0"), 1);
+new $p(obj5).set("0", 10);
+compare(new $p(obj5).get("0"), 10);
 
 let obj6 = [{
   name: "Robert",
   age: 30
 }];
 
-compare($p.get(obj6, "0.name"), "Robert");
-$p.set(obj6, "0.name", "James");
-compare($p.get(obj6, ["0", "name"]), "James");
+compare(new $p(obj6).get("0.name"), "Robert");
+new $p(obj6).set("0.name", "James");
+compare(new $p(obj6).get(["0", "name"]), "James");
 
-$p.set(obj6, "", 23434);
-compare($p.get(obj6, ["0", "name"]), "James");
-compare($p.get(obj6, ["0", "age"]), 30);
+new $p(obj6).set("", 23434);
+compare(new $p(obj6).get(["0", "name"]), "James");
+compare(new $p(obj6).get(["0", "age"]), 30);
 
 let obj7 = {
   a: 1,
@@ -129,17 +127,9 @@ let obj7 = {
   d: [4, 5, 6, [7, 8, 9]]
 }
 
-compareArrays($p.keys(obj7), ["a", "b", "c", "d.0", "d.1", "d.2", "d.3.0", "d.3.1", "d.3.2"]);
-compareArrays($p.values(obj7), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-
-compareArrays($p.filterKeys(obj7, i => i > 5), ["d.2", "d.3.0", "d.3.1", "d.3.2"]);
-
-compareArrays($p.filter(obj7, i => i > 5), [6, 7, 8, 9]);
-compareArrays($p.map(obj7, i => i * 2), [2, 4, 6, 8, 10, 12, 14, 16, 18]);
-
-compare($p.reduce(obj7, (acc, i) => acc + i, 0), 45);
-
-compareArrays($p.filter([1, 2, 3, 4, 5], i => i < 3), [1, 2]);
+compareArrays(new $p(obj7).keys(), ["a", "b", "c", "d.0", "d.1", "d.2", "d.3.0", "d.3.1", "d.3.2"]);
+compareArrays(new $p(obj7).values(), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+compareArrays(new $p(obj7).filterKeys(i => i > 5), ["d.2", "d.3.0", "d.3.1", "d.3.2"]);
 
 let objToFlatten = {
   a: 1,
@@ -150,6 +140,221 @@ let objToFlatten = {
   d: [4, 5, 6, 7]
 }
 
-let flatObj = $p.flatten(objToFlatten);
+let flatObj = new $p(objToFlatten).flatten();
 
-compare($p.get(flatObj, "d.3"), 7);
+compare(new $p(flatObj).get("d.3"), 7);
+
+compare(new $p([1, 2, 3, 4]).equal(undefined), false);
+compare(new $p([1, 2, 3, 4]).equal("5"), false);
+compare(new $p([1, 2, 3, 4]).equal([1, 2, 3, 4]), true);
+compare(new $p([1, 2, 3]).equal([1, 2, 3, 4]), false);
+compare(new $p([4, 3, 2, 1]).equal([1, 2, 3, 4]), false);
+compare(new $p([1, 2, 3, 4]).equal(obj), false);
+compare(new $p([1, 2, 3, 4]).equal({}), false);
+
+let obj8 = {
+  a: {
+    b: 2,
+    c: 3
+  },
+  d: [1, 2, 3, 4]
+};
+
+compare(new $p(obj8).equal({}), false);
+compare(new $p(obj8).equal([{
+  a: {
+    b: 2,
+    c: 3
+  },
+  d: [1, 2, 3, 4]
+}]), false);
+
+compare(new $p(obj8).equal({
+  a: {
+    b: 2,
+    d: 3
+  },
+  d: [1, 2, 3, 4]
+}), false);
+
+compare(new $p(obj8).equal({
+  a: {
+    b: 2,
+    c: 4
+  },
+  d: [1, 2, 3, 4]
+}), false);
+
+compare(new $p(obj8).equal({
+  a: {
+    b: 2,
+    c: 3
+  },
+  d: [1, 2, 3, 4]
+}), true);
+
+let obj9 = {}
+
+compare(new $p(obj9).get("a"), undefined);
+new $p(obj9).set("a", 5);
+compare(new $p(obj9).get("a"), 5);
+
+compare(new $p(obj9).get("b.c"), undefined);
+new $p(obj9).set("b.c", 5);
+compare(new $p(obj9).get("b.c"), 5);
+
+let array = [];
+compare(new $p(array).get("1"), undefined);
+new $p(array).set("1", 5);
+compare(new $p(array).get("1"), 5);
+
+compare(new $p(array).get("0.a"), undefined);
+new $p(array).set("0.a", 5);
+compare(new $p(array).get("0.a"), 5);
+
+compare(new $p(array).get("5.1"), undefined);
+new $p(array).set("5.1", 5);
+compare(new $p(array).get("5.1"), 5);
+
+let obj10 = {
+  a: 2,
+  b: 3,
+  c: [0, 10, 0, 0]
+}
+
+compare(new $p(obj10).findKey(i => i == 10), "c.1");
+
+let obj11 = {
+  a: 2,
+  b: "string",
+  c: {
+    d: [1, 2, 3, 4],
+    e: {
+      f: 2
+    }
+  }
+}
+
+compare(new $p(obj11).validate([{
+  path: "a",
+}, {
+  path: "b",
+}, {
+  path: "c"
+}]), true);
+
+compare(new $p(obj11).validate([{
+  path: "a",
+}, {
+  path: "b",
+}, {
+  path: "f.d.e",
+  optional: true,
+  rules: [
+    v => v == 47
+  ]
+}]), true);
+
+compare(new $p(obj11).validate([{
+  path: "a",
+  rules: [
+    v => v == 2
+  ]
+}, {
+  path: "b",
+  rules: [
+    v => typeof v === "string",
+    v => v.length > 0
+  ]
+}]), true);
+
+compare(new $p(obj11).validate([{
+  path: "a",
+  rules: [
+    v => v == 2
+  ]
+}, {
+  path: "b",
+  rules: [
+    v => typeof v === "string",
+    v => v.length > 10
+  ]
+}]), false);
+
+compare(new $p(obj11).validate([{
+  path: "a",
+  rules: [
+    v => v == 2
+  ]
+}, {
+  path: "c.d",
+  rules: [
+    v => v.length == 4
+  ]
+}]), true);
+
+compare(new $p(obj11).validate([{
+  path: "c.e.f",
+  rules: [
+    v => v > 10
+  ]
+}, {
+  path: "c.d",
+  rules: [
+    v => v.length == 4
+  ]
+}]), false);
+
+let obj12 = {
+  a: 2,
+  b: 3,
+  c: 4,
+  d: 5
+}
+
+compare(new $p(obj12).validate([{
+  path: "*",
+  rules: [
+    v => v < 10
+  ]
+}]), true);
+
+compare(new $p(obj12).validate([{
+  path: "*",
+  rules: [
+    v => v > 5
+  ]
+}]), false);
+
+compare(new $p([]).validate([{
+  path: "*",
+  optional: true,
+  rules: [
+    v => v > 5
+  ]
+}]), true);
+
+compare(new $p([4, 3, 7]).validate([{
+  path: "*",
+  optional: true,
+  rules: [
+    v => v > 5
+  ]
+}]), false);
+
+compare(new $p([7, 8, 9]).validate([{
+  path: "*",
+  optional: true,
+  rules: [
+    v => v > 5
+  ]
+}]), true);
+
+compare(new $p([1, 2, 3, 4]).validate([{
+  path: "*",
+  rules: [
+    v => v < 4
+  ]
+}]), false);
+
+compare(new $p([1, 2, 3, 4]).get([1]), 2);

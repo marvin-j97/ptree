@@ -4,9 +4,9 @@
   "description": "Deep object walking, manipulation and validation",
   "main": "dist/index.js",
   "scripts": {
-    "watch": "tsc -w -p tsconfig.json",
     "test": "node test/"
   },
+  "types": "dist/index.d.ts",
   "author": "dotvirus",
   "license": "ISC",
   "files": [
