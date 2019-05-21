@@ -31,8 +31,7 @@ function equalArrays(a, b) {
 const PTree = function (_root) {
 
   if (typeof _root !== "object") {
-    console.log("PTree: Constructor received atomic root")
-    return null;
+    throw "PTree: Constructor received atomic value as root";
   }
 
   this._root = _root;
@@ -41,8 +40,7 @@ const PTree = function (_root) {
   this.get = function (path) {
     const pathType = typeof path;
     if (pathType !== "string" && !Array.isArray(path)) {
-      console.warn(`PTree: String or Array expected, got: ${pathType}`);
-      return undefined;
+      throw `PTree: String or Array expected, received: ${pathType}`;
     }
 
     if (this._root[path] !== undefined) {
@@ -71,8 +69,7 @@ const PTree = function (_root) {
   this.keys = function (prev) {
     const objType = typeof this._root;
     if (objType !== "object" && !Array.isArray(this._root)) {
-      console.warn(`PTree: Object or Array expected, got: ${objType}`);
-      return undefined;
+      throw `PTree: Object or Array expected, received: ${objType}`;
     }
 
     let keys = [];
@@ -86,13 +83,15 @@ const PTree = function (_root) {
         }
         return acc.concat(key);
       }, []);
-    } else {
+    } else if (Array.isArray(this._root)) {
       keys = this._root.reduce((acc, v, i) => {
         if (typeof v === "object") {
           return acc.concat(new PTree(v).keys(i.toString()));
         }
         return acc.concat(i.toString());
       }, []);
+    } else {
+      throw `Tried to get keys of atomic value`;
     }
 
     if (prev !== undefined) {
@@ -106,8 +105,7 @@ const PTree = function (_root) {
   this.set = function (path, value) {
     const pathType = typeof path;
     if (pathType !== "string" && !Array.isArray(path)) {
-      console.warn(`PTree: String or Array expected, got: ${pathType}`);
-      return undefined;
+      throw `PTree: String or Array expected, received: ${pathType}`;
     }
 
     let segments = getSegments(path);
@@ -125,8 +123,7 @@ const PTree = function (_root) {
         if (typeof obj === "object") {
           obj[seg] = value;
         } else {
-          console.warn(`PTree: Tried to set property of atomic value`);
-          return;
+          throw `PTree: Tried to set property of atomic value`;
         }
       }
 
@@ -152,9 +149,7 @@ const PTree = function (_root) {
 
   // Get all keys where a certain condition is true
   this.filterKeys = function (filter) {
-    return this.keys().filter(k => {
-      return filter(this.get(k));
-    });
+    return this.keys().filter(k => filter(this.get(k)));
   }
 
   // Flatten object
@@ -218,8 +213,9 @@ const PTree = function (_root) {
   // Validate object integrity
   this.validate = function (props) {
     for (const prop of props) {
-      if (!prop.path)
-        return console.error("PTree: Invalid path in validation function");
+      if (!prop.path) {
+        throw "PTree: Invalid path in validation function";
+      }
 
       if (prop.path === "*") {
         props.push(...this.keys().map(key => {
