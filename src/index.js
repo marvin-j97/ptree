@@ -248,6 +248,23 @@ const PTree = function (_root) {
 
     return true;
   }
+
+  this.copy = function () {
+    const keys = this.keys();
+
+    let obj = {};
+    if (Array.isArray(_root)) {
+      obj = [];
+    }
+
+    let copy = new PTree(obj);
+
+    keys.forEach(key => {
+      copy.set(key, this.get(key));
+    });
+
+    return copy._root;
+  }
 }
 
 module.exports = function (_root) {

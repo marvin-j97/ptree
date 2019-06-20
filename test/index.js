@@ -386,3 +386,16 @@ compare(new $p(new $p({
     d: [1, 4, 9]
   }
 }), true);
+
+let obj13 = {
+  a: [1,2,3],
+  b: 4,
+  c: {
+    d: {
+      e: 5,
+      f: 6
+    }
+  }
+}
+
+compare(new $p(obj13).equal(new $p(obj13).copy()), true);
