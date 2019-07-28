@@ -1,6 +1,6 @@
 {
-  "name": "ptree",
-  "version": "1.0.0",
+  "name": "@dotvirus/ptree",
+  "version": "1.0.1",
   "description": "Deep object walking, manipulation and validation",
   "main": "dist/index.js",
   "scripts": {
@@ -9,7 +9,8 @@
   "types": "dist/index.d.ts",
   "author": "dotvirus",
   "license": "ISC",
-  "files": [
-    "dist/"
-  ]
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/dotvirus/ptree.ts.git"
+  }
 }
