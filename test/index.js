@@ -1,4 +1,4 @@
-let $p = require("../src/");
+let $p = require("../dist/").default;
 
 function compare(actual, expected) {
   console.log(actual === expected ? 'Test passed.' : `${actual} differed from expected value: ${expected}`);

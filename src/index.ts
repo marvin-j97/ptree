@@ -1,8 +1,15 @@
-function getSegments(path) {
-  const pathType = typeof path;
-  let segments;
+type Path = string | (string | number | (() => (string | number)))[];
 
-  if (pathType === "string") {
+type ValidationProp = {
+  path: Path;
+  optional: boolean;
+  rules: ((val: any) => boolean)[];
+}
+
+function getSegments(path: Path): (string | number)[] {
+  let segments: (string | number)[] = [];
+
+  if (typeof path === "string") {
     if (!path.length) {
       return [];
     }
@@ -10,52 +17,44 @@ function getSegments(path) {
     segments = path.split(".");
   } else {
     segments = path.map(seg => {
-      const segType = typeof seg;
-      if (segType === "string" || segType === "number") {
-        return seg;
-      }
-
-      if (segType === "function") {
+      if (typeof seg === "function") {
         return seg();
       }
+      else if (typeof seg === "string" || typeof seg === "number") {
+        return seg;
+      }
+      return "";
     });
   }
 
   return segments;
 }
 
-function equalArrays(a, b) {
+function equalArrays(a: any[], b: any[]) {
   return a.length == b.length && a.every((v, i) => v === b[i]);
 }
 
-const PTree = function (_root) {
+export default class PTree {
+  root: {} | any[];
 
-  if (typeof _root !== "object") {
-    throw "PTree: Constructor received atomic value as root";
+  constructor(root: object) {
+    this.root = root;
   }
 
-  this._root = _root;
-
-  // Get value at path
-  this.get = function (path) {
-    const pathType = typeof path;
-    if (pathType !== "string" && !Array.isArray(path)) {
-      throw `PTree: String or Array expected, received: ${pathType}`;
+  public get(path: Path): any {
+    if ((typeof path === "string" || typeof path === "number") && ((<any>this.root)[path]) !== undefined) {
+      return (<any>this.root)[path];
     }
 
-    if (this._root[path] !== undefined) {
-      return this._root[path];
-    }
-
-    let segments = getSegments(path);
+    const segments = getSegments(path);
 
     // Iterative deep object descent
-    let obj = this._root;
+    let obj = this.root;
 
     for (let i = 0; i < segments.length; i++) {
-      const seg = segments[i];
+      const seg = segments[i] as string | number;
 
-      obj = obj[seg];
+      obj = (<any>obj)[seg];
 
       if (obj === undefined) {
         return undefined;
@@ -65,26 +64,20 @@ const PTree = function (_root) {
     return obj;
   }
 
-  // Get key paths recursively
-  this.keys = function (prev) {
-    const objType = typeof this._root;
-    if (objType !== "object" && !Array.isArray(this._root)) {
-      throw `PTree: Object or Array expected, received: ${objType}`;
-    }
+  public keys(prev?: string): string[] {
+    let keys = [] as string[];
 
-    let keys = [];
-
-    if (objType === "object" && !Array.isArray(this._root)) {
-      let props = Object.keys(this._root);
-      keys = props.reduce((acc, key) => {
-        const v = this._root[key];
+    if (!Array.isArray(this.root)) {
+      let props = Object.keys(this.root);
+      keys = props.reduce((acc: string[], key) => {
+        const v = (<any>this.root)[key];
         if (typeof v === "object") {
           return acc.concat(new PTree(v).keys(key));
         }
         return acc.concat(key);
       }, []);
-    } else if (Array.isArray(this._root)) {
-      keys = this._root.reduce((acc, v, i) => {
+    } else if (Array.isArray(this.root)) {
+      keys = this.root.reduce((acc, v, i) => {
         if (typeof v === "object") {
           return acc.concat(new PTree(v).keys(i.toString()));
         }
@@ -101,60 +94,50 @@ const PTree = function (_root) {
     return keys;
   }
 
-  // Set value at path
-  this.set = function (path, value) {
-    const pathType = typeof path;
-    if (pathType !== "string" && !Array.isArray(path)) {
-      throw `PTree: String or Array expected, received: ${pathType}`;
-    }
-
+  public set(path: Path, value: any): void {
     let segments = getSegments(path);
 
     // Iterative deep object descent & set
-    let obj = this._root;
+    let obj = this.root;
 
     for (let i = 0; i < segments.length; i++) {
       const current = obj;
-      const seg = segments[i];
+      const seg = segments[i] as string | number;
 
       if (i < segments.length - 1) {
-        obj = obj[seg];
+        obj = (<any>obj)[seg];
       } else {
         if (typeof obj === "object") {
-          obj[seg] = value;
+          (<any>obj)[seg] = value;
         } else {
           throw `PTree: Tried to set property of atomic value`;
         }
       }
 
       if (obj === undefined) {
-        if (/^[0-9]+$/.test(seg))
-          current[seg] = [];
+        if (/^[0-9]+$/.test(seg.toString()))
+          (<any>current)[seg] = [];
         else
-          current[seg] = {};
-        obj = current[seg];
+          (<any>current)[seg] = {};
+        obj = (<any>current)[seg];
       }
     }
   }
 
-  // Get all values as array
-  this.values = function () {
+  public values() {
     return this.fromKeys(this.keys());
   }
 
-  // Get all values from an array of keys
-  this.fromKeys = function (keys) {
+  public fromKeys(keys: Path[]) {
     return keys.map(k => this.get(k));
   }
 
-  // Get all keys where a certain condition is true
-  this.filterKeys = function (filter) {
+  public filterKeys(filter: (val: any) => boolean) {
     return this.keys().filter(k => filter(this.get(k)));
   }
 
-  // Flatten object
-  this.flatten = function () {
-    let flat = {};
+  public flatten() {
+    let flat = {} as any;
 
     this.keys().forEach(key => {
       flat[key] = this.get(key);
@@ -163,9 +146,8 @@ const PTree = function (_root) {
     return flat;
   }
 
-  // Compare
-  this.equal = function (other) {
-    if (typeof this._root !== typeof other)
+  public equal(other: object) {
+    if (typeof this.root !== typeof other)
       return false;
 
     const otherTree = new PTree(other);
@@ -182,21 +164,19 @@ const PTree = function (_root) {
     return equalArrays(values, otherValues);
   }
 
-  // Find key where condition is met
-  this.findKey = function (finder) {
+  public findKey(finder: (val: any) => boolean) {
     return this.keys().find(k => {
       return finder(this.get(k));
     });
   }
 
-  // Maps all keys to new values (returns new object/array)
-  this.map = function (mapper) {
+  public map(mapper: (val: any) => any) {
     const keys = this.keys();
-    let mapped;
+    let mapped: any;
 
-    if (Array.isArray(this._root)) {
+    if (Array.isArray(this.root)) {
       mapped = [];
-    } else if (typeof this._root === "object") {
+    } else if (typeof this.root === "object") {
       mapped = {};
     }
 
@@ -210,8 +190,7 @@ const PTree = function (_root) {
     return mapped;
   }
 
-  // Validate object integrity
-  this.validate = function (props) {
+  public validate(props: ValidationProp[]): boolean {
     for (const prop of props) {
       if (!prop.path) {
         throw "PTree: Invalid path in validation function";
@@ -249,11 +228,11 @@ const PTree = function (_root) {
     return true;
   }
 
-  this.copy = function () {
+  public copy() {
     const keys = this.keys();
 
     let obj = {};
-    if (Array.isArray(_root)) {
+    if (Array.isArray(this.root)) {
       obj = [];
     }
 
@@ -263,10 +242,6 @@ const PTree = function (_root) {
       copy.set(key, this.get(key));
     });
 
-    return copy._root;
+    return copy.root;
   }
 }
-
-module.exports = function (_root) {
-  return new PTree(_root);
-};
