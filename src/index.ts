@@ -2,8 +2,10 @@ type Path = string | (string | number | (() => (string | number)))[];
 
 type ValidationProp = {
   path: Path;
-  optional: boolean;
-  rules: ((val: any) => boolean)[];
+  optional?: boolean;
+  rules?: (((val: any, obj: any) => boolean | string))[];
+  preTransform?: ((val: any, obj: any) => any)[];
+  postTransform?: ((val: any, obj: any) => any)[];
 }
 
 function getSegments(path: Path): (string | number)[] {
@@ -190,7 +192,7 @@ export default class PTree {
     return mapped;
   }
 
-  public validate(props: ValidationProp[]): boolean {
+  public validate(props: ValidationProp[]): boolean | string {
     for (const prop of props) {
       if (!prop.path) {
         throw "PTree: Invalid path in validation function";
@@ -207,7 +209,15 @@ export default class PTree {
         continue;
       }
 
-      const value = this.get(prop.path);
+      let value = this.get(prop.path);
+
+      if (prop.preTransform) {
+        for (const transformer of prop.preTransform) {
+          this.set(prop.path, transformer(value, this.root));
+        }
+
+        value = this.get(prop.path);
+      }
 
       if (value === undefined && !prop.optional) {
         return false;
@@ -219,8 +229,21 @@ export default class PTree {
 
       if (prop.rules) {
         for (const rule of prop.rules) {
-          if (!rule(value))
-            return false;
+
+          if (typeof rule === "function") {
+            const result = rule(value, this.root);
+
+            if (result === true)  
+              continue;
+            
+            return result;
+          }
+        }
+      }
+
+      if (prop.postTransform) {
+        for (const transformer of prop.postTransform) {
+          this.set(prop.path, transformer(value, this.root));
         }
       }
     }

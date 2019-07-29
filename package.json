@@ -1,9 +1,10 @@
 {
   "name": "@dotvirus/ptree",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Deep object walking, manipulation and validation",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
     "test": "node test/"
   },
   "types": "dist/index.d.ts",
