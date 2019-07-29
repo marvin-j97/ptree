@@ -203,7 +203,9 @@ export default class PTree {
           return {
             path: key,
             optional: prop.optional,
-            rules: prop.rules
+            rules: prop.rules,
+            preTransform: prop.preTransform,
+            postTransform: prop.postTransform
           };
         }));
         continue;
