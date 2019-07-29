@@ -95,7 +95,7 @@ Like keys, but returns all leaf values. Essentially acts as an infinitely deep a
 
 ``` javascript
 const root = new ptree([ 1, 2, 3, 4, [ 5, 6, 7, [ 8, 9, 10, { a: 11, x: 12 }]]]);
-console.log(root.values()); // -> [ '0.name', '0.age', '1.name', '1.age' ]
+console.log(root.values()); // -> [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
 ```
 
 ## fromKeys
@@ -161,11 +161,10 @@ console.log(root.map(v => v.toString())); // -> { a: '5', b: { c: '7', d: '8', e
 ```
 
 # validate
-
-``` javascript
 Checks the integrity of the root object.
 This is done by defining rules for each path you want to check.
 
+``` javascript
 const root = new ptree([1,2,3]);
 
 // Check if paths are defined
