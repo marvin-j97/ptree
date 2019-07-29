@@ -399,3 +399,66 @@ let obj13 = {
 }
 
 compare(new $p(obj13).equal(new $p(obj13).copy()), true);
+
+let obj14 = {
+  a: [1,2,3,4,5,6,7,8,9,10]
+}
+
+compare(new $p(obj14).validate([
+  {
+    path: "a",
+    rules: [
+      v => Array.isArray(v),
+      v => v.length > 5 ? "Array too long!" : true
+    ]
+  }
+]), "Array too long!");
+
+let obj15 = {
+  password: "   secretPassword   "
+}
+
+compare(new $p(obj15).validate([
+  {
+    path: "password",
+    preTransform: [
+      v => v.trim()
+    ],
+    rules: [
+      v => v === "secretPassword"
+    ],
+    postTransform: [
+      v => "0petkaoi4tjou4jt4"
+    ]
+  }
+]), true);
+
+compare(obj15.password, "0petkaoi4tjou4jt4");
+
+let obj16 = {
+  a: 5,
+  b: 5
+}
+
+compare(new $p(obj16).validate([
+  {
+    path: "a",
+    rules: [
+      (v, obj) => v === obj.b
+    ]
+  }
+]), true);
+
+let obj17 = {
+  a: 5,
+  b: 6
+}
+
+compare(new $p(obj17).validate([
+  {
+    path: "a",
+    rules: [
+      (v, obj) => v === obj.b
+    ]
+  }
+]), false);
