@@ -235,19 +235,19 @@ let obj11 = {
 }
 
 compare(new $p(obj11).validate([{
-  path: "a",
+  key: "a",
 }, {
-  path: "b",
+  key: "b",
 }, {
-  path: "c"
+  key: "c"
 }]), true);
 
 compare(new $p(obj11).validate([{
-  path: "a",
+  key: "a",
 }, {
-  path: "b",
+  key: "b",
 }, {
-  path: "f.d.e",
+  key: "f.d.e",
   optional: true,
   rules: [
     v => v == 47
@@ -255,12 +255,12 @@ compare(new $p(obj11).validate([{
 }]), true);
 
 compare(new $p(obj11).validate([{
-  path: "a",
+  key: "a",
   rules: [
     v => v == 2
   ]
 }, {
-  path: "b",
+  key: "b",
   rules: [
     v => typeof v === "string",
     v => v.length > 0
@@ -268,12 +268,12 @@ compare(new $p(obj11).validate([{
 }]), true);
 
 compare(new $p(obj11).validate([{
-  path: "a",
+  key: "a",
   rules: [
     v => v == 2
   ]
 }, {
-  path: "b",
+  key: "b",
   rules: [
     v => typeof v === "string",
     v => v.length > 10
@@ -281,24 +281,24 @@ compare(new $p(obj11).validate([{
 }]), false);
 
 compare(new $p(obj11).validate([{
-  path: "a",
+  key: "a",
   rules: [
     v => v == 2
   ]
 }, {
-  path: "c.d",
+  key: "c.d",
   rules: [
     v => v.length == 4
   ]
 }]), true);
 
 compare(new $p(obj11).validate([{
-  path: "c.e.f",
+  key: "c.e.f",
   rules: [
     v => v > 10
   ]
 }, {
-  path: "c.d",
+  key: "c.d",
   rules: [
     v => v.length == 4
   ]
@@ -312,21 +312,21 @@ let obj12 = {
 }
 
 compare(new $p(obj12).validate([{
-  path: "*",
+  key: "*",
   rules: [
     v => v < 10
   ]
 }]), true);
 
 compare(new $p(obj12).validate([{
-  path: "*",
+  key: "*",
   rules: [
     v => v > 5
   ]
 }]), false);
 
 compare(new $p([]).validate([{
-  path: "*",
+  key: "*",
   optional: true,
   rules: [
     v => v > 5
@@ -334,7 +334,7 @@ compare(new $p([]).validate([{
 }]), true);
 
 compare(new $p([4, 3, 7]).validate([{
-  path: "*",
+  key: "*",
   optional: true,
   rules: [
     v => v > 5
@@ -342,7 +342,7 @@ compare(new $p([4, 3, 7]).validate([{
 }]), false);
 
 compare(new $p([7, 8, 9]).validate([{
-  path: "*",
+  key: "*",
   optional: true,
   rules: [
     v => v > 5
@@ -350,7 +350,7 @@ compare(new $p([7, 8, 9]).validate([{
 }]), true);
 
 compare(new $p([1, 2, 3, 4]).validate([{
-  path: "*",
+  key: "*",
   rules: [
     v => v < 4
   ]
@@ -406,7 +406,7 @@ let obj14 = {
 
 compare(new $p(obj14).validate([
   {
-    path: "a",
+    key: "a",
     rules: [
       v => Array.isArray(v),
       v => v.length > 5 ? "Array too long!" : true
@@ -420,7 +420,7 @@ let obj15 = {
 
 compare(new $p(obj15).validate([
   {
-    path: "password",
+    key: "password",
     preTransform: [
       v => v.trim()
     ],
@@ -442,7 +442,7 @@ let obj16 = {
 
 compare(new $p(obj16).validate([
   {
-    path: "a",
+    key: "a",
     rules: [
       (v, obj) => v === obj.b
     ]
@@ -456,7 +456,7 @@ let obj17 = {
 
 compare(new $p(obj17).validate([
   {
-    path: "a",
+    key: "a",
     rules: [
       (v, obj) => v === obj.b
     ]

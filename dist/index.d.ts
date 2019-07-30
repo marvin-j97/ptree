@@ -1,6 +1,6 @@
-declare type Path = string | (string | number | (() => (string | number)))[];
+declare type Key = string | (string | number | (() => (string | number)))[];
 declare type ValidationProp = {
-    path: Path;
+    key: Key;
     optional?: boolean;
     rules?: (((val: any, obj: any) => boolean | string))[];
     preTransform?: ((val: any, obj: any) => any)[];
@@ -9,11 +9,11 @@ declare type ValidationProp = {
 export default class PTree {
     root: {} | any[];
     constructor(root: object);
-    get(path: Path): any;
+    get(key: Key): any;
     keys(prev?: string): string[];
-    set(path: Path, value: any): void;
+    set(key: Key, value: any): void;
     values(): any[];
-    fromKeys(keys: Path[]): any[];
+    fromKeys(keys: Key[]): any[];
     filterKeys(filter: (val: any) => boolean): string[];
     flatten(): any;
     equal(other: object): boolean;
