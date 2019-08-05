@@ -462,3 +462,35 @@ compare(new $p(obj17).validate([
     ]
   }
 ]), false);
+
+compare(new $p(obj17).validate([
+  {
+    key: "c",
+    optional: true,
+    rules: [
+      v => v > 0
+    ]
+  },
+  {
+    key: "b",
+    rules: [
+      v => typeof b == "string"
+    ]
+  }
+]), false);
+
+compare(new $p(obj17).validate([
+  {
+    key: "b",
+    rules: [
+      v => typeof b == "string"
+    ]
+  },
+  {
+    key: "c",
+    optional: true,
+    rules: [
+      v => v > 0
+    ]
+  }
+]), false);

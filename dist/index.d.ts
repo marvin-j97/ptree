@@ -1,5 +1,5 @@
-declare type Key = string | (string | number | (() => (string | number)))[];
-declare type ValidationProp = {
+export declare type Key = string | (string | number | (() => (string | number)))[];
+export declare type ValidationProp = {
     key: Key;
     optional?: boolean;
     rules?: (((val: any, obj: any) => boolean | string))[];
@@ -22,4 +22,3 @@ export default class PTree {
     validate(props: ValidationProp[]): boolean | string;
     copy(): {} | any[];
 }
-export {};

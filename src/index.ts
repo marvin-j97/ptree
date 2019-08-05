@@ -1,6 +1,6 @@
-type Key = string | (string | number | (() => (string | number)))[];
+export type Key = string | (string | number | (() => (string | number)))[];
 
-type ValidationProp = {
+export type ValidationProp = {
   key: Key;
   optional?: boolean;
   rules?: (((val: any, obj: any) => boolean | string))[];
@@ -229,7 +229,7 @@ export default class PTree {
       }
 
       if (value === undefined && prop.optional) {
-        return true;
+        continue;
       }
 
       if (prop.rules) {
