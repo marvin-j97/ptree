@@ -388,7 +388,7 @@ compare(new $p(new $p({
 }), true);
 
 let obj13 = {
-  a: [1,2,3],
+  a: [1, 2, 3],
   b: 4,
   c: {
     d: {
@@ -401,37 +401,33 @@ let obj13 = {
 compare(new $p(obj13).equal(new $p(obj13).copy()), true);
 
 let obj14 = {
-  a: [1,2,3,4,5,6,7,8,9,10]
+  a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 }
 
-compare(new $p(obj14).validate([
-  {
-    key: "a",
-    rules: [
-      v => Array.isArray(v),
-      v => v.length > 5 ? "Array too long!" : true
-    ]
-  }
-]), "Array too long!");
+compare(new $p(obj14).validate([{
+  key: "a",
+  rules: [
+    v => Array.isArray(v),
+    v => v.length > 5 ? "Array too long!" : true
+  ]
+}]), "Array too long!");
 
 let obj15 = {
   password: "   secretPassword   "
 }
 
-compare(new $p(obj15).validate([
-  {
-    key: "password",
-    preTransform: [
-      v => v.trim()
-    ],
-    rules: [
-      v => v === "secretPassword"
-    ],
-    postTransform: [
-      v => "0petkaoi4tjou4jt4"
-    ]
-  }
-]), true);
+compare(new $p(obj15).validate([{
+  key: "password",
+  preTransform: [
+    v => v.trim()
+  ],
+  rules: [
+    v => v === "secretPassword"
+  ],
+  postTransform: [
+    v => "0petkaoi4tjou4jt4"
+  ]
+}]), true);
 
 compare(obj15.password, "0petkaoi4tjou4jt4");
 
@@ -440,31 +436,26 @@ let obj16 = {
   b: 5
 }
 
-compare(new $p(obj16).validate([
-  {
-    key: "a",
-    rules: [
-      (v, obj) => v === obj.b
-    ]
-  }
-]), true);
+compare(new $p(obj16).validate([{
+  key: "a",
+  rules: [
+    (v, obj) => v === obj.b
+  ]
+}]), true);
 
 let obj17 = {
   a: 5,
   b: 6
 }
 
-compare(new $p(obj17).validate([
-  {
-    key: "a",
-    rules: [
-      (v, obj) => v === obj.b
-    ]
-  }
-]), false);
+compare(new $p(obj17).validate([{
+  key: "a",
+  rules: [
+    (v, obj) => v === obj.b
+  ]
+}]), false);
 
-compare(new $p(obj17).validate([
-  {
+compare(new $p(obj17).validate([{
     key: "c",
     optional: true,
     rules: [
@@ -479,8 +470,7 @@ compare(new $p(obj17).validate([
   }
 ]), false);
 
-compare(new $p(obj17).validate([
-  {
+compare(new $p(obj17).validate([{
     key: "b",
     rules: [
       v => typeof b == "string"
@@ -494,3 +484,36 @@ compare(new $p(obj17).validate([
     ]
   }
 ]), false);
+
+compare($p.from({
+  a: 2
+}).get("a"), 2);
+
+const list = [];
+
+$p.from([1, {
+  a: 2,
+  b: 3
+}]).forEach(v => list.push(v));
+
+compareArrays(list, [1, 2, 3]);
+
+compare($p.from({
+  a: 2,
+  b: 3
+}).includes(3), true);
+
+compare($p.from({
+  a: 2,
+  b: {
+    c: [3, 4]
+  }
+}).includes(3), true);
+
+compare($p.from({
+  a: 2,
+  b: {
+    c: [3, 4]
+  }
+}).includes(5), false);
+

@@ -3,9 +3,9 @@ export type Key = string | (string | number | (() => (string | number)))[];
 export type ValidationProp = {
   key: Key;
   optional?: boolean;
-  rules?: (((val: any, obj: any) => boolean | string))[];
-  preTransform?: ((val: any, obj: any) => any)[];
-  postTransform?: ((val: any, obj: any) => any)[];
+  rules?: (((val: any, root: object) => boolean | string))[];
+  preTransform?: ((val: any, root: object) => any)[];
+  postTransform?: ((val: any, root: object) => any)[];
 }
 
 function getSegments(key: Key): (string | number)[] {
@@ -39,6 +39,10 @@ export default class PTree {
 
   constructor(root: object) {
     this.root = root;
+  }
+
+  static from(root: object) {
+    return new PTree(root);
   }
 
   public get(key: Key): any {
@@ -137,8 +141,8 @@ export default class PTree {
     return keys.map(k => this.get(k));
   }
 
-  public filterKeys(filter: (val: any) => boolean) {
-    return this.keys().filter(k => filter(this.get(k)));
+  public filterKeys(filter: (val: any, key: string, root: object) => boolean) {
+    return this.keys().filter(key => filter(this.get(key), key, this.root));
   }
 
   public flatten() {
@@ -169,13 +173,13 @@ export default class PTree {
     return equalArrays(values, otherValues);
   }
 
-  public findKey(finder: (val: any) => boolean) {
-    return this.keys().find(k => {
-      return finder(this.get(k));
+  public findKey(finder: (val: any, key: string, root: object) => boolean) {
+    return this.keys().find(key => {
+      return finder(this.get(key), key, this.root);
     });
   }
 
-  public map(mapper: (val: any) => any) {
+  public map(mapper: (val: any, key: string, root: object) => any) {
     const keys = this.keys();
     let mapped: any;
 
@@ -188,8 +192,7 @@ export default class PTree {
     let p = new PTree(mapped);
 
     keys.forEach(key => {
-      let value = this.get(key);
-      p.set(key, mapper(value));
+      p.set(key, mapper(this.get(key), key, this.root));
     });
 
     return mapped;
@@ -216,14 +219,6 @@ export default class PTree {
 
       let value = this.get(prop.key);
 
-      if (prop.preTransform) {
-        for (const transformer of prop.preTransform) {
-          this.set(prop.key, transformer(value, this.root));
-        }
-
-        value = this.get(prop.key);
-      }
-
       if (value === undefined && !prop.optional) {
         return false;
       }
@@ -232,15 +227,23 @@ export default class PTree {
         continue;
       }
 
+      if (prop.preTransform) {
+        for (const transformer of prop.preTransform) {
+          this.set(prop.key, transformer(value, this.root));
+        }
+
+        value = this.get(prop.key);
+      }
+
       if (prop.rules) {
         for (const rule of prop.rules) {
 
           if (typeof rule === "function") {
             const result = rule(value, this.root);
 
-            if (result === true)  
+            if (result === true)
               continue;
-            
+
             return result;
           }
         }
@@ -261,13 +264,23 @@ export default class PTree {
     if (Array.isArray(this.root)) {
       obj = [];
     }
-    
+
     let copy = new PTree(obj);
-    
+
     this.keys().forEach(key => {
       copy.set(key, this.get(key));
     });
 
     return copy.root;
+  }
+
+  public forEach(func: (val: any, key: string, root: object) => void) {
+    this.keys().forEach(key => {
+      func(this.get(key), key, this.root);
+    });
+  }
+
+  public includes(val: any) {
+    return this.findKey(v => v === val) !== undefined;
   }
 }
