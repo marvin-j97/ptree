@@ -517,3 +517,9 @@ compare($p.from({
   }
 }).includes(5), false);
 
+compareArrays($p.from({
+  a: 2,
+  b: {
+    c: null
+  }
+}).keys(), ["a", "b.c"]);

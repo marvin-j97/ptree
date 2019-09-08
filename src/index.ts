@@ -76,7 +76,7 @@ export default class PTree {
 
       props.forEach(key => {
         const v = (<any>this.root)[key];
-        if (typeof v === "object") {
+        if (typeof v === "object" && v !== null) {
           keys.push(...new PTree(v).keys(key));
         }
         else {
@@ -85,7 +85,7 @@ export default class PTree {
       });
     } else if (Array.isArray(this.root)) {
       this.root.forEach((v, i) => {
-        if (typeof v === "object") {
+        if (typeof v === "object" && v !== null) {
           keys.push(...new PTree(v).keys(i.toString()));
         }
         else {
@@ -116,7 +116,7 @@ export default class PTree {
       if (i < segments.length - 1) {
         obj = (<any>obj)[seg];
       } else {
-        if (typeof obj === "object") {
+        if (typeof obj === "object" && obj !== null) {
           (<any>obj)[seg] = value;
         } else {
           throw `PTree: Tried to set property of atomic value`;
