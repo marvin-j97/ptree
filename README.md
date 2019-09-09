@@ -309,6 +309,7 @@ router.post("/create",
   async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       console.log(req.body.password) // returns lower case version of req.body.password
+      res.sendStatus(200)
     } catch (err) {
       next(err)
     }
