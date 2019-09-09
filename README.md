@@ -289,7 +289,6 @@ import { validate} from "validationMiddleware.ts";
 
 const router = express.Router();
 router.post("/create",
-  validateHost,
   validate([
     {
       key: "body.username",
