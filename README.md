@@ -281,6 +281,78 @@ console.log(root.validate([
 
 ```
 
+# ExpressJS Middleware TypeScript Validation Example
+``` typescript
+// sampleRouter.ts
+import * as express from "express"
+import { validate} from "validationMiddleware.ts";
+
+const router = express.Router();
+router.post("/create",
+  validateHost,
+  validate([
+    {
+      key: "body.username",
+      preTransform: [
+        v => v.toLowerCase()
+      ],
+      rules: [
+        (v: any) => typeof v == "string"
+      ]
+    },
+    {
+      key: "body.password",  
+      rules: [
+        (v: any) => typeof v == "string"
+      ],
+    }
+  ]),
+  async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      console.log(req.body.password) // returns lower case version of req.body.password
+    } catch (err) {
+      next(err)
+    }
+  })
+
+// validationMiddleware.ts
+import * as express from "express"
+import httpStatus from "../services/status"
+import ptree from "@dotvirus/ptree";
+
+type Key = string | (string | number | (() => (string | number)))[];
+type ValidationProp = {
+  key: Key;
+  optional?: boolean;
+  rules?: (((val: any, obj: any) => boolean | string))[];
+  preTransform?: ((val: any, obj: any) => any)[];
+  postTransform?: ((val: any, obj: any) => any)[];
+};
+
+export function validate(rules: ValidationProp[]) {
+  return function (req: express.Request, res: express.Response, next: express.NextFunction) {
+    const result = new ptree(req).validate(rules)
+
+    if (result === true) {
+      return next()
+    }
+    else next(httpStatus.BAD_REQUEST)
+  }
+}
+
+// httpStatus.ts
+export default {
+	OK: 200,
+	BAD_REQUEST: 400,
+	UNAUTHORIZED: 401,
+	FORBIDDEN: 403,
+	NOT_FOUND: 404,
+	CONFLICT: 409,
+	SERVER_ERROR: 500,
+	TEAPOT: 418
+}
+```
+
 # copy
 Deep-copies the root object/array.
 
