@@ -1,6 +1,6 @@
 [![npm version](https://badge.fury.io/js/%40dotvirus%2Fptree.svg)](https://badge.fury.io/js/%40dotvirus%2Fptree)
 
-# ptree.ts
+# ptree
 Deep object walking, manipulation and validation
 
 This package wraps regular Objects and Arrays, providing more functionality for accessing, manipulating and validating deep object/array integrity.
