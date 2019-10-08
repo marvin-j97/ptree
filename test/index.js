@@ -686,8 +686,3 @@ try {
 } catch (err) {
   compare(err, "PTree: Tried to set property of atomic value");
 }
-
-$p.from(obj19).remove("a");
-
-compare(obj19.a, undefined);
-compare(Object.keys(obj19).length, 0);
