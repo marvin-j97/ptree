@@ -1,29 +1,31 @@
-export type Key = string | (string | number | (() => (string | number)))[];
+export type Key = string | number | (() => string | number);
+
+export type TransformFunction = (val: any, root: object) => any;
+export type Rule = (val: any, root: object) => boolean | string;
 
 export type ValidationProp = {
   key: Key;
   optional?: boolean;
-  rules?: (((val: any, root: object) => boolean | string))[];
-  preTransform?: ((val: any, root: object) => any)[];
-  postTransform?: ((val: any, root: object) => any)[];
-}
+  rules?: Rule[];
+  preTransform?: TransformFunction | TransformFunction[];
+  postTransform?: TransformFunction | TransformFunction[];
+};
 
-function getSegments(key: Key): (string | number)[] {
-  if (typeof key === "string") {
-    if (!key.length) {
-      return [];
-    }
-
-    var segments: (string | number)[] = key.split(".");
-  } else {
-    var segments = key.map(seg => {
-      if (typeof seg === "function") {
-        return seg();
+function getSegments(path: Key | Key[]): (string | number)[] {
+  let segments = [];
+  if (typeof path === "string") {
+    if (path.length) segments = path.split(".");
+    else return [];
+  } else if (typeof path === "number") segments = [path];
+  else if (typeof path === "function") segments = [path()];
+  else {
+    segments = path.map(key => {
+      if (typeof key === "function") {
+        return key();
+      } else if (typeof key === "string" || typeof key === "number") {
+        return key;
       }
-      else if (typeof seg === "string" || typeof seg === "number") {
-        return seg;
-      }
-      return "";
+      throw new Error(`Unsupported key type: ${typeof key}`);
     });
   }
 
@@ -34,8 +36,16 @@ function equalArrays(a: any[], b: any[]) {
   return a.length == b.length && a.every((v, i) => v === b[i]);
 }
 
+interface KeyValueMap {
+  [key: string]: any;
+}
+
 export default class PTree {
-  root: {} | any[];
+  root: KeyValueMap | any[];
+
+  public getRoot() {
+    return this.root;
+  }
 
   constructor(root: object) {
     this.root = root;
@@ -45,8 +55,13 @@ export default class PTree {
     return new PTree(root);
   }
 
-  public get(key: Key): any {
-    if ((typeof key === "string" || typeof key === "number") && ((<any>this.root)[key]) !== undefined) {
+  public get(key?: Key): any {
+    if (key === undefined) return this.root;
+
+    if (
+      (typeof key === "string" || typeof key === "number") &&
+      (<any>this.root)[key] !== undefined
+    ) {
       return (<any>this.root)[key];
     }
 
@@ -78,8 +93,7 @@ export default class PTree {
         const v = (<any>this.root)[key];
         if (typeof v === "object" && v !== null) {
           keys.push(...new PTree(v).keys(key));
-        }
-        else {
+        } else {
           keys.push(key);
         }
       });
@@ -87,8 +101,7 @@ export default class PTree {
       this.root.forEach((v, i) => {
         if (typeof v === "object" && v !== null) {
           keys.push(...new PTree(v).keys(i.toString()));
-        }
-        else {
+        } else {
           keys.push(i.toString());
         }
       });
@@ -97,14 +110,42 @@ export default class PTree {
     }
 
     if (prev !== undefined) {
-      keys = keys.map(k => `${prev}.${k}`)
+      keys = keys.map(k => `${prev}.${k}`);
     }
 
     return keys;
   }
 
+  public remove(key: Key) {
+    const segments = getSegments(key);
+    const lastSegment = segments.pop();
+
+    let obj = this.root;
+
+    while (!!segments.length) {
+      //@ts-ignore
+      obj = obj[segments.shift()];
+    }
+
+    try {
+      if (Array.isArray(obj)) {
+        // @ts-ignore
+        const val = obj.splice(lastSegment, 1)[0];
+        return val;
+      } else {
+        // @ts-ignore
+        const val = obj[lastSegment];
+        // @ts-ignore
+        delete obj[lastSegment];
+        return val;
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
   public set(key: Key, value: any): void {
-    let segments = getSegments(key);
+    const segments = getSegments(key);
 
     // Iterative deep object descent & set
     let obj = this.root;
@@ -126,8 +167,7 @@ export default class PTree {
       if (obj === undefined) {
         if (/^[0-9]+$/.test(seg.toString()) || typeof seg === "number")
           (<any>current)[seg] = [];
-        else
-          (<any>current)[seg] = {};
+        else (<any>current)[seg] = {};
         obj = (<any>current)[seg];
       }
     }
@@ -156,16 +196,14 @@ export default class PTree {
   }
 
   public equal(other: object) {
-    if (typeof this.root !== typeof other)
-      return false;
+    if (typeof this.root !== typeof other) return false;
 
     const otherTree = new PTree(other);
 
     const keys = this.keys();
     const otherKeys = otherTree.keys();
 
-    if (!equalArrays(keys, otherKeys))
-      return false;
+    if (!equalArrays(keys, otherKeys)) return false;
 
     const values = this.fromKeys(keys);
     const otherValues = otherTree.fromKeys(otherKeys);
@@ -205,15 +243,17 @@ export default class PTree {
       }
 
       if (prop.key === "*") {
-        props.push(...this.keys().map(key => {
-          return {
-            key,
-            optional: prop.optional,
-            rules: prop.rules,
-            preTransform: prop.preTransform,
-            postTransform: prop.postTransform
-          };
-        }));
+        props.push(
+          ...this.keys().map(key => {
+            return {
+              key,
+              optional: prop.optional,
+              rules: prop.rules,
+              preTransform: prop.preTransform,
+              postTransform: prop.postTransform
+            };
+          })
+        );
         continue;
       }
 
@@ -228,31 +268,29 @@ export default class PTree {
       }
 
       if (prop.preTransform) {
-        for (const transformer of prop.preTransform) {
-          this.set(prop.key, transformer(value, this.root));
-        }
+        if (Array.isArray(prop.preTransform))
+          for (const transformer of prop.preTransform) {
+            this.set(prop.key, transformer(value, this.root));
+          }
+        else this.set(prop.key, prop.preTransform(value, this.root));
 
         value = this.get(prop.key);
       }
 
       if (prop.rules) {
         for (const rule of prop.rules) {
-
-          if (typeof rule === "function") {
-            const result = rule(value, this.root);
-
-            if (result === true)
-              continue;
-
-            return result;
-          }
+          const result = rule(value, this.root);
+          if (result === true) continue;
+          return result;
         }
       }
 
       if (prop.postTransform) {
-        for (const transformer of prop.postTransform) {
-          this.set(prop.key, transformer(value, this.root));
-        }
+        if (Array.isArray(prop.postTransform))
+          for (const transformer of prop.postTransform) {
+            this.set(prop.key, transformer(value, this.root));
+          }
+        else this.set(prop.key, prop.postTransform(value, this.root));
       }
     }
 
@@ -260,18 +298,11 @@ export default class PTree {
   }
 
   public copy() {
-    let obj = {};
-    if (Array.isArray(this.root)) {
-      obj = [];
-    }
+    return JSON.parse(JSON.stringify(this.root));
+  }
 
-    let copy = new PTree(obj);
-
-    this.keys().forEach(key => {
-      copy.set(key, this.get(key));
-    });
-
-    return copy.root;
+  public each(func: (val: any, key: string, root: object) => void) {
+    this.forEach(func);
   }
 
   public forEach(func: (val: any, key: string, root: object) => void) {
