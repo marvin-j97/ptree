@@ -686,3 +686,33 @@ try {
 } catch (err) {
   compare(err, "PTree: Tried to set property of atomic value");
 }
+
+const obj20 = {
+  a: {
+    b: 2,
+    c: {
+      d: 3,
+      e: 5,
+      f: [1, 2, 3]
+    }
+  }
+};
+
+compare($p.from(obj20).get("a.b"), 2);
+$p.from(obj20).remove("a.b");
+compare($p.from(obj20).get("a.b"), undefined);
+
+compareArrays($p.from(obj20).get("a.c.f"), [1, 2, 3]);
+compare($p.from(obj20).remove("a.c.f.1"), 2); // <- array, because we're splicing from an array
+compareArrays($p.from(obj20).get("a.c.f"), [1, 3]);
+
+$p.from(obj20).remove("a.c.f");
+compare($p.from(obj20).get("a.c.f"), undefined);
+
+$p.from(obj20).remove("a.c");
+compare($p.from(obj20).get("a.c"), undefined);
+
+$p.from(obj20).remove("a");
+compare($p.from(obj20).get("a"), undefined);
+
+compare(Object.keys($p.from(obj20).getRoot()).length, 0);

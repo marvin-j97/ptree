@@ -43,6 +43,10 @@ interface KeyValueMap {
 export default class PTree {
   root: KeyValueMap | any[];
 
+  public getRoot() {
+    return this.root;
+  }
+
   constructor(root: object) {
     this.root = root;
   }
@@ -112,8 +116,36 @@ export default class PTree {
     return keys;
   }
 
+  public remove(key: Key) {
+    const segments = getSegments(key);
+    const lastSegment = segments.pop();
+
+    let obj = this.root;
+
+    while (!!segments.length) {
+      //@ts-ignore
+      obj = obj[segments.shift()];
+    }
+
+    try {
+      if (Array.isArray(obj)) {
+        // @ts-ignore
+        const val = obj.splice(lastSegment, 1)[0];
+        return val;
+      } else {
+        // @ts-ignore
+        const val = obj[lastSegment];
+        // @ts-ignore
+        delete obj[lastSegment];
+        return val;
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
   public set(key: Key, value: any): void {
-    let segments = getSegments(key);
+    const segments = getSegments(key);
 
     // Iterative deep object descent & set
     let obj = this.root;
@@ -267,6 +299,10 @@ export default class PTree {
 
   public copy() {
     return JSON.parse(JSON.stringify(this.root));
+  }
+
+  public each(func: (val: any, key: string, root: object) => void) {
+    this.forEach(func);
   }
 
   public forEach(func: (val: any, key: string, root: object) => void) {
