@@ -342,11 +342,11 @@ compare(
   new $p(obj11).validate([
     {
       key: "a",
-      rules: [v => v == 2]
+      rules: v => v == 2
     },
     {
       key: "c.d",
-      rules: [v => v.length == 4]
+      rules: v => v.length == 4
     }
   ]),
   true
@@ -356,11 +356,11 @@ compare(
   new $p(obj11).validate([
     {
       key: "c.e.f",
-      rules: [v => v > 10]
+      rules: v => v > 10
     },
     {
       key: "c.d",
-      rules: [v => v.length == 4]
+      rules: v => v.length == 4
     }
   ]),
   false
@@ -387,7 +387,7 @@ compare(
   new $p(obj12).validate([
     {
       key: "*",
-      rules: [v => v > 5]
+      rules: v => v > 5
     }
   ]),
   false

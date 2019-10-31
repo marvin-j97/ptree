@@ -4,7 +4,7 @@ export declare type Rule = (val: any, root: object) => boolean | string;
 export declare type ValidationProp = {
     key: Key;
     optional?: boolean;
-    rules?: Rule[];
+    rules?: Rule | Rule[];
     preTransform?: TransformFunction | TransformFunction[];
     postTransform?: TransformFunction | TransformFunction[];
 };

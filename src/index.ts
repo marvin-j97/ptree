@@ -6,7 +6,7 @@ export type Rule = (val: any, root: object) => boolean | string;
 export type ValidationProp = {
   key: Key;
   optional?: boolean;
-  rules?: Rule[];
+  rules?: Rule | Rule[];
   preTransform?: TransformFunction | TransformFunction[];
   postTransform?: TransformFunction | TransformFunction[];
 };
@@ -278,10 +278,15 @@ export default class PTree {
       }
 
       if (prop.rules) {
-        for (const rule of prop.rules) {
-          const result = rule(value, this.root);
-          if (result === true) continue;
-          return result;
+        if (Array.isArray(prop.rules)) {
+          for (const rule of prop.rules) {
+            const result = rule(value, this.root);
+            if (result === true) continue;
+            return result;
+          }
+        } else {
+          const result = prop.rules(value, this.root);
+          if (!result) return result;
         }
       }
 
