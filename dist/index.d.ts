@@ -22,6 +22,7 @@ export default class PTree {
     set(key: Key, value: any): void;
     values(): any[];
     fromKeys(keys: Key[]): any[];
+    pick(keys: Key[]): any[] | KeyValueMap;
     filterKeys(filter: (val: any, key: string, root: object) => boolean): string[];
     flatten(): any;
     equal(other: object): boolean;
@@ -32,5 +33,10 @@ export default class PTree {
     each(func: (val: any, key: string, root: object) => void): void;
     forEach(func: (val: any, key: string, root: object) => void): void;
     includes(val: any): boolean;
+    every(pred: (val: any, key: string, root: object) => boolean): boolean;
+    all(pred: (val: any, key: string, root: object) => boolean): boolean;
+    some(pred: (val: any, key: string, root: object) => boolean): boolean;
+    any(pred: (val: any, key: string, root: object) => boolean): boolean;
+    merge(other: object, overwrite?: boolean): void;
 }
 export {};

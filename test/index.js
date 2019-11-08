@@ -77,6 +77,20 @@ compareArrays(
   ["a", "b", "c"]
 );
 
+let arr = [
+  {
+    name: "Peter",
+    age: 24
+  },
+  {
+    name: "Not Peter",
+    age: 42
+  }
+];
+
+compare($p.from(arr).get(0).name, "Peter");
+compare($p.from(arr).get([1]).age, 42);
+
 compareArrays(new $p(obj2).keys(), [
   "a.c",
   "a.d",
@@ -716,3 +730,130 @@ $p.from(obj20).remove("a");
 compare($p.from(obj20).get("a"), undefined);
 
 compare(Object.keys($p.from(obj20).getRoot()).length, 0);
+
+compare(
+  $p
+    .from({
+      a: [1, 2, 3, 4]
+    })
+    .every(i => typeof i == "number"),
+  true
+);
+
+compare(
+  $p
+    .from({
+      a: [1, "string", 3, 4]
+    })
+    .every(i => typeof i == "number"),
+  false
+);
+
+compare(
+  $p
+    .from({
+      a: [1, "string", 3, 4]
+    })
+    .some(i => typeof i == "string"),
+  true
+);
+
+compare(
+  $p
+    .from({
+      a: [1, 2, 3, 4]
+    })
+    .some(i => typeof i == "string"),
+  false
+);
+
+compare(
+  $p
+    .from({
+      a: [1, { a: 2, b: { a: 2, b: { c: 2, d: { e: 7 } } } }, 3, 4]
+    })
+    .some(i => i >= 7),
+  true
+);
+
+let obj21 = [
+  {
+    name: "Peter",
+    age: 24
+  },
+  {
+    name: "Not Peter",
+    age: 42
+  }
+];
+
+compare(
+  $p.from($p.from(obj21).pick(["0.name", "1.name"])).equal([
+    {
+      name: "Peter"
+    },
+    {
+      name: "Not Peter"
+    }
+  ]),
+  true
+);
+
+{
+  // Merge with overwrite (default)
+
+  let obj22 = {
+    a: {
+      b: 2
+    }
+  };
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, undefined);
+  compare(obj22.d, undefined);
+
+  $p.from(obj22).merge({
+    a: {
+      b: 4,
+      c: 2
+    },
+    d: 4
+  });
+
+  $p.from(obj22).set("e", 5);
+
+  compare(obj22.a.b, 4);
+  compare(obj22.a.c, 2);
+  compare(obj22.d, 4);
+}
+
+{
+  // Merge without overwrite
+
+  let obj22 = {
+    a: {
+      b: 2
+    }
+  };
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, undefined);
+  compare(obj22.d, undefined);
+
+  $p.from(obj22).merge(
+    {
+      a: {
+        b: 4,
+        c: 2
+      },
+      d: 4
+    },
+    false
+  );
+
+  $p.from(obj22).set("e", 5);
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, 2);
+  compare(obj22.d, 4);
+}
