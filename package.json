@@ -1,6 +1,6 @@
 {
   "name": "@dotvirus/ptree",
-  "version": "1.4.0",
+  "version": "1.5.2",
   "description": "Deep object walking, manipulation and validation",
   "main": "dist/index.js",
   "scripts": {

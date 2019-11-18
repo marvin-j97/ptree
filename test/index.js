@@ -37,7 +37,13 @@ const obj = {
 };
 compare(new $p(obj).get(""), obj);
 compare(new $p(obj).get("a.thisdoesnotexist"), undefined);
-compare(new $p([[1, 2, 3], [4, 5, 6]]).get("0.0"), 1);
+compare(
+  new $p([
+    [1, 2, 3],
+    [4, 5, 6]
+  ]).get("0.0"),
+  1
+);
 
 const obj2 = {
   a: {
@@ -77,6 +83,20 @@ compareArrays(
   ["a", "b", "c"]
 );
 
+let arr = [
+  {
+    name: "Peter",
+    age: 24
+  },
+  {
+    name: "Not Peter",
+    age: 42
+  }
+];
+
+compare($p.from(arr).get(0).name, "Peter");
+compare($p.from(arr).get([1]).age, 42);
+
 compareArrays(new $p(obj2).keys(), [
   "a.c",
   "a.d",
@@ -85,14 +105,10 @@ compareArrays(new $p(obj2).keys(), [
   "b.e.2",
   "b.e.3"
 ]);
-compareArrays(new $p(obj2).keys().map(k => new $p(obj2).get(k)), [
-  2,
-  3,
-  4,
-  5,
-  6,
-  7
-]);
+compareArrays(
+  new $p(obj2).keys().map(k => new $p(obj2).get(k)),
+  [2, 3, 4, 5, 6, 7]
+);
 
 let obj3 = {
   a: 2
@@ -153,12 +169,10 @@ compareArrays(new $p(obj7).keys(), [
   "d.3.2"
 ]);
 compareArrays(new $p(obj7).values(), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-compareArrays(new $p(obj7).filterKeys(i => i > 5), [
-  "d.2",
-  "d.3.0",
-  "d.3.1",
-  "d.3.2"
-]);
+compareArrays(
+  new $p(obj7).filterKeys(i => i > 5),
+  ["d.2", "d.3.0", "d.3.1", "d.3.2"]
+);
 
 let objToFlatten = {
   a: 1,
@@ -265,7 +279,10 @@ let obj10 = {
   c: [0, 10, 0, 0]
 };
 
-compare(new $p(obj10).findKey(i => i == 10), "c.1");
+compare(
+  new $p(obj10).findKey(i => i == 10),
+  "c.1"
+);
 
 let obj11 = {
   a: 2,
@@ -342,11 +359,11 @@ compare(
   new $p(obj11).validate([
     {
       key: "a",
-      rules: [v => v == 2]
+      rules: v => v == 2
     },
     {
       key: "c.d",
-      rules: [v => v.length == 4]
+      rules: v => v.length == 4
     }
   ]),
   true
@@ -356,11 +373,11 @@ compare(
   new $p(obj11).validate([
     {
       key: "c.e.f",
-      rules: [v => v > 10]
+      rules: v => v > 10
     },
     {
       key: "c.d",
-      rules: [v => v.length == 4]
+      rules: v => v.length == 4
     }
   ]),
   false
@@ -387,7 +404,7 @@ compare(
   new $p(obj12).validate([
     {
       key: "*",
-      rules: [v => v > 5]
+      rules: v => v > 5
     }
   ]),
   false
@@ -438,7 +455,10 @@ compare(
 
 compare(new $p([1, 2, 3, 4]).get([1]), 2);
 
-compareArrays(new $p([1, 2, 3, 4]).map(i => i * i), [1, 4, 9, 16]);
+compareArrays(
+  new $p([1, 2, 3, 4]).map(i => i * i),
+  [1, 4, 9, 16]
+);
 compare(
   new $p(
     new $p({
@@ -716,3 +736,182 @@ $p.from(obj20).remove("a");
 compare($p.from(obj20).get("a"), undefined);
 
 compare(Object.keys($p.from(obj20).getRoot()).length, 0);
+
+compare(
+  $p
+    .from({
+      a: [1, 2, 3, 4]
+    })
+    .every(i => typeof i == "number"),
+  true
+);
+
+compare(
+  $p
+    .from({
+      a: [1, "string", 3, 4]
+    })
+    .every(i => typeof i == "number"),
+  false
+);
+
+compare(
+  $p
+    .from({
+      a: [1, "string", 3, 4]
+    })
+    .some(i => typeof i == "string"),
+  true
+);
+
+compare(
+  $p
+    .from({
+      a: [1, 2, 3, 4]
+    })
+    .some(i => typeof i == "string"),
+  false
+);
+
+compare(
+  $p
+    .from({
+      a: [1, { a: 2, b: { a: 2, b: { c: 2, d: { e: 7 } } } }, 3, 4]
+    })
+    .some(i => i >= 7),
+  true
+);
+
+let obj21 = [
+  {
+    name: "Peter",
+    age: 24
+  },
+  {
+    name: "Not Peter",
+    age: 42
+  }
+];
+
+compare(
+  $p.from($p.from(obj21).pick(["0.name", "1.name"])).equal([
+    {
+      name: "Peter"
+    },
+    {
+      name: "Not Peter"
+    }
+  ]),
+  true
+);
+
+{
+  // Merge with overwrite (default)
+
+  let obj22 = {
+    a: {
+      b: 2
+    }
+  };
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, undefined);
+  compare(obj22.d, undefined);
+
+  $p.from(obj22).merge({
+    a: {
+      b: 4,
+      c: 2
+    },
+    d: 4
+  });
+
+  $p.from(obj22).set("e", 5);
+
+  compare(obj22.a.b, 4);
+  compare(obj22.a.c, 2);
+  compare(obj22.d, 4);
+}
+
+{
+  // Merge without overwrite
+
+  let obj22 = {
+    a: {
+      b: 2
+    }
+  };
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, undefined);
+  compare(obj22.d, undefined);
+
+  $p.from(obj22).merge(
+    {
+      a: {
+        b: 4,
+        c: 2
+      },
+      d: 4
+    },
+    false
+  );
+
+  $p.from(obj22).set("e", 5);
+
+  compare(obj22.a.b, 2);
+  compare(obj22.a.c, 2);
+  compare(obj22.d, 4);
+}
+
+// Validation Default
+
+const obj23 = {
+  a: 2
+};
+
+$p.from(obj23).validate([
+  {
+    key: "a",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "b",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "c",
+    optional: true
+  }
+]);
+
+compare(obj23.a, 2);
+compare(obj23.b, 3);
+compare(obj23.c, undefined);
+
+const obj24 = {
+  a: 2
+};
+
+$p.from(obj24).validate([
+  {
+    key: "a",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "b",
+    optional: true,
+    default: () => 5
+  },
+  {
+    key: "c",
+    optional: true
+  }
+]);
+
+compare(obj24.a, 2);
+compare(obj24.b, 5);
+compare(obj24.c, undefined);

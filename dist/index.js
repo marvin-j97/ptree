@@ -1,1 +1,297 @@
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0});function getSegments(a){let b=[];if(!("string"==typeof a))b="number"==typeof a?[a]:"function"==typeof a?[a()]:a.map(a=>{if("function"==typeof a)return a();if("string"==typeof a||"number"==typeof a)return a;throw new Error(`Unsupported key type: ${typeof a}`)});else if(a.length)b=a.split(".");else return[];return b}function equalArrays(c,a){return c.length==a.length&&c.every((b,c)=>b===a[c])}class PTree{constructor(a){this.root=a}getRoot(){return this.root}static from(a){return new PTree(a)}get(a){if(a===void 0)return this.root;if(("string"==typeof a||"number"==typeof a)&&void 0!==this.root[a])return this.root[a];const b=getSegments(a);let c=this.root;for(let d=0;d<b.length;d++){const a=b[d];if(c=c[a],void 0===c)return}return c}keys(a){let b=[];if(!Array.isArray(this.root)){let a=Object.keys(this.root);a.forEach(a=>{const c=this.root[a];"object"==typeof c&&null!==c?b.push(...new PTree(c).keys(a)):b.push(a)})}else if(Array.isArray(this.root))this.root.forEach((a,c)=>{"object"==typeof a&&null!==a?b.push(...new PTree(a).keys(c.toString())):b.push(c.toString())});else throw`Tried to get keys of atomic value`;return void 0!==a&&(b=b.map(b=>`${a}.${b}`)),b}remove(a){const b=getSegments(a),c=b.pop();let d=this.root;for(;!!b.length;)d=d[b.shift()];try{if(Array.isArray(d)){const a=d.splice(c,1)[0];return a}else{const a=d[c];return delete d[c],a}}catch(a){throw a}}set(a,b){const c=getSegments(a);let d=this.root;for(let e=0;e<c.length;e++){const a=d,f=c[e];if(e<c.length-1)d=d[f];else if("object"==typeof d&&null!==d)d[f]=b;else throw`PTree: Tried to set property of atomic value`;d===void 0&&(a[f]=/^[0-9]+$/.test(f.toString())||"number"==typeof f?[]:{},d=a[f])}}values(){return this.fromKeys(this.keys())}fromKeys(a){return a.map(a=>this.get(a))}filterKeys(a){return this.keys().filter(b=>a(this.get(b),b,this.root))}flatten(){let a={};return this.keys().forEach(b=>{a[b]=this.get(b)}),a}equal(a){if(typeof this.root!=typeof a)return!1;const b=new PTree(a),c=this.keys(),d=b.keys();if(!equalArrays(c,d))return!1;const e=this.fromKeys(c),f=b.fromKeys(d);return equalArrays(e,f)}findKey(a){return this.keys().find(b=>a(this.get(b),b,this.root))}map(a){const b=this.keys();let c;Array.isArray(this.root)?c=[]:"object"==typeof this.root&&(c={});let d=new PTree(c);return b.forEach(b=>{d.set(b,a(this.get(b),b,this.root))}),c}validate(a){for(const b of a){if(!b.key)throw"PTree: Invalid key in validation function";if("*"===b.key){a.push(...this.keys().map(a=>({key:a,optional:b.optional,rules:b.rules,preTransform:b.preTransform,postTransform:b.postTransform})));continue}let c=this.get(b.key);if(c===void 0&&!b.optional)return!1;if(!(void 0===c&&b.optional)){if(b.preTransform){if(Array.isArray(b.preTransform))for(const a of b.preTransform)this.set(b.key,a(c,this.root));else this.set(b.key,b.preTransform(c,this.root));c=this.get(b.key)}if(b.rules)for(const a of b.rules){const b=a(c,this.root);if(!0!==b)return b}if(b.postTransform)if(Array.isArray(b.postTransform))for(const a of b.postTransform)this.set(b.key,a(c,this.root));else this.set(b.key,b.postTransform(c,this.root))}}return!0}copy(){return JSON.parse(JSON.stringify(this.root))}each(a){this.forEach(a)}forEach(a){this.keys().forEach(b=>{a(this.get(b),b,this.root)})}includes(a){return this.findKey(b=>b===a)!==void 0}}exports.default=PTree;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function getSegments(path) {
+    let segments = [];
+    if (typeof path === "string") {
+        if (path.length)
+            segments = path.split(".");
+        else
+            return [];
+    }
+    else if (typeof path === "number")
+        segments = [path];
+    else if (typeof path === "function")
+        segments = [path()];
+    else {
+        segments = path.map(key => {
+            if (typeof key === "function") {
+                return key();
+            }
+            else if (typeof key === "string" || typeof key === "number") {
+                return key;
+            }
+            throw new Error(`Unsupported key type: ${typeof key}`);
+        });
+    }
+    return segments;
+}
+function equalArrays(a, b) {
+    return a.length == b.length && a.every((v, i) => v === b[i]);
+}
+class PTree {
+    constructor(root) {
+        this.root = root;
+    }
+    getRoot() {
+        return this.root;
+    }
+    static from(root) {
+        return new PTree(root);
+    }
+    get(key) {
+        if (key === undefined)
+            return this.root;
+        if ((typeof key === "string" || typeof key === "number") &&
+            this.root[key] !== undefined) {
+            return this.root[key];
+        }
+        const segments = getSegments(key);
+        let obj = this.root;
+        for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            obj = obj[seg];
+            if (obj === undefined) {
+                return undefined;
+            }
+        }
+        return obj;
+    }
+    keys(prev) {
+        let keys = [];
+        if (!Array.isArray(this.root)) {
+            let props = Object.keys(this.root);
+            props.forEach(key => {
+                const v = this.root[key];
+                if (typeof v === "object" && v !== null) {
+                    keys.push(...new PTree(v).keys(key));
+                }
+                else {
+                    keys.push(key);
+                }
+            });
+        }
+        else if (Array.isArray(this.root)) {
+            this.root.forEach((v, i) => {
+                if (typeof v === "object" && v !== null) {
+                    keys.push(...new PTree(v).keys(i.toString()));
+                }
+                else {
+                    keys.push(i.toString());
+                }
+            });
+        }
+        else {
+            throw `Tried to get keys of atomic value`;
+        }
+        if (prev !== undefined) {
+            keys = keys.map(k => `${prev}.${k}`);
+        }
+        return keys;
+    }
+    remove(key) {
+        const segments = getSegments(key);
+        const lastSegment = segments.pop();
+        let obj = this.root;
+        while (!!segments.length) {
+            obj = obj[segments.shift()];
+        }
+        try {
+            if (Array.isArray(obj)) {
+                const val = obj.splice(lastSegment, 1)[0];
+                return val;
+            }
+            else {
+                const val = obj[lastSegment];
+                delete obj[lastSegment];
+                return val;
+            }
+        }
+        catch (err) {
+            throw err;
+        }
+    }
+    set(key, value) {
+        const segments = getSegments(key);
+        let obj = this.root;
+        for (let i = 0; i < segments.length; i++) {
+            const current = obj;
+            const seg = segments[i];
+            if (i < segments.length - 1) {
+                obj = obj[seg];
+            }
+            else {
+                if (typeof obj === "object" && obj !== null) {
+                    obj[seg] = value;
+                }
+                else {
+                    throw `PTree: Tried to set property of atomic value`;
+                }
+            }
+            if (obj === undefined) {
+                const nextSeg = segments[i + 1];
+                if (/^[0-9]+$/.test(nextSeg.toString()) || typeof nextSeg === "number")
+                    current[seg] = [];
+                else
+                    current[seg] = {};
+                obj = current[seg];
+            }
+        }
+    }
+    values() {
+        return this.fromKeys(this.keys());
+    }
+    fromKeys(keys) {
+        return keys.map(k => this.get(k));
+    }
+    pick(keys) {
+        let newRoot;
+        if (Array.isArray(this.root))
+            newRoot = PTree.from([]);
+        else
+            newRoot = PTree.from({});
+        keys.forEach(key => {
+            newRoot.set(key, this.get(key));
+        });
+        return newRoot.root;
+    }
+    filterKeys(filter) {
+        return this.keys().filter(key => filter(this.get(key), key, this.root));
+    }
+    flatten() {
+        let flat = {};
+        this.keys().forEach(key => {
+            flat[key] = this.get(key);
+        });
+        return flat;
+    }
+    equal(other) {
+        if (typeof this.root !== typeof other)
+            return false;
+        const otherTree = new PTree(other);
+        const keys = this.keys();
+        const otherKeys = otherTree.keys();
+        if (!equalArrays(keys, otherKeys))
+            return false;
+        const values = this.fromKeys(keys);
+        const otherValues = otherTree.fromKeys(otherKeys);
+        return equalArrays(values, otherValues);
+    }
+    findKey(finder) {
+        return this.keys().find(key => {
+            return finder(this.get(key), key, this.root);
+        });
+    }
+    map(mapper) {
+        const keys = this.keys();
+        let mapped;
+        if (Array.isArray(this.root)) {
+            mapped = [];
+        }
+        else if (typeof this.root === "object") {
+            mapped = {};
+        }
+        let p = new PTree(mapped);
+        keys.forEach(key => {
+            p.set(key, mapper(this.get(key), key, this.root));
+        });
+        return mapped;
+    }
+    validate(props) {
+        for (const prop of props) {
+            if (!prop.key) {
+                throw "PTree: Invalid key in validation function";
+            }
+            if (prop.key === "*") {
+                props.push(...this.keys().map(key => {
+                    return {
+                        key,
+                        optional: prop.optional,
+                        rules: prop.rules,
+                        preTransform: prop.preTransform,
+                        postTransform: prop.postTransform
+                    };
+                }));
+                continue;
+            }
+            let value = this.get(prop.key);
+            if (value === undefined && !prop.optional) {
+                return false;
+            }
+            if (value === undefined && prop.optional) {
+                if (prop.default !== undefined) {
+                    if (typeof prop.default == "function")
+                        this.set(prop.key, prop.default(this.root));
+                    else
+                        this.set(prop.key, prop.default);
+                }
+                continue;
+            }
+            if (prop.preTransform) {
+                if (Array.isArray(prop.preTransform))
+                    for (const transformer of prop.preTransform) {
+                        this.set(prop.key, transformer(value, this.root));
+                    }
+                else
+                    this.set(prop.key, prop.preTransform(value, this.root));
+                value = this.get(prop.key);
+            }
+            if (prop.rules) {
+                if (Array.isArray(prop.rules)) {
+                    for (const rule of prop.rules) {
+                        const result = rule(value, this.root);
+                        if (result === true)
+                            continue;
+                        return result;
+                    }
+                }
+                else {
+                    const result = prop.rules(value, this.root);
+                    if (!result)
+                        return result;
+                }
+            }
+            if (prop.postTransform) {
+                if (Array.isArray(prop.postTransform))
+                    for (const transformer of prop.postTransform) {
+                        this.set(prop.key, transformer(value, this.root));
+                    }
+                else
+                    this.set(prop.key, prop.postTransform(value, this.root));
+            }
+        }
+        return true;
+    }
+    copy() {
+        return JSON.parse(JSON.stringify(this.root));
+    }
+    each(func) {
+        this.forEach(func);
+    }
+    forEach(func) {
+        this.keys().forEach(key => {
+            func(this.get(key), key, this.root);
+        });
+    }
+    includes(val) {
+        return this.findKey(v => v === val) !== undefined;
+    }
+    every(pred) {
+        return this.keys().every((key, i, keys) => pred(this.get(key), key, keys));
+    }
+    all(pred) {
+        return this.every(pred);
+    }
+    some(pred) {
+        return this.keys().some((key, i, keys) => pred(this.get(key), key, keys));
+    }
+    any(pred) {
+        return this.some(pred);
+    }
+    merge(other, overwrite = true) {
+        PTree.from(other).each((val, key) => {
+            if (this.get(key) === undefined || overwrite)
+                this.set(key, val);
+        });
+    }
+}
+exports.default = PTree;
