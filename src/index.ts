@@ -1,11 +1,13 @@
 export type Key = string | number | (() => string | number);
 
+export type DefaultFunction = (root: object) => any;
 export type TransformFunction = (val: any, root: object) => any;
 export type Rule = (val: any, root: object) => boolean | string;
 
 export type ValidationProp = {
   key: Key;
   optional?: boolean;
+  default?: any | DefaultFunction;
   rules?: Rule | Rule[];
   preTransform?: TransformFunction | TransformFunction[];
   postTransform?: TransformFunction | TransformFunction[];
@@ -277,6 +279,11 @@ export default class PTree {
       }
 
       if (value === undefined && prop.optional) {
+        if (prop.default !== undefined) {
+          if (typeof prop.default == "function")
+            this.set(prop.key, prop.default(this.root));
+          else this.set(prop.key, prop.default);
+        }
         continue;
       }
 

@@ -1,9 +1,11 @@
 export declare type Key = string | number | (() => string | number);
+export declare type DefaultFunction = (root: object) => any;
 export declare type TransformFunction = (val: any, root: object) => any;
 export declare type Rule = (val: any, root: object) => boolean | string;
 export declare type ValidationProp = {
     key: Key;
     optional?: boolean;
+    default?: any | DefaultFunction;
     rules?: Rule | Rule[];
     preTransform?: TransformFunction | TransformFunction[];
     postTransform?: TransformFunction | TransformFunction[];

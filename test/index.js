@@ -37,7 +37,13 @@ const obj = {
 };
 compare(new $p(obj).get(""), obj);
 compare(new $p(obj).get("a.thisdoesnotexist"), undefined);
-compare(new $p([[1, 2, 3], [4, 5, 6]]).get("0.0"), 1);
+compare(
+  new $p([
+    [1, 2, 3],
+    [4, 5, 6]
+  ]).get("0.0"),
+  1
+);
 
 const obj2 = {
   a: {
@@ -99,14 +105,10 @@ compareArrays(new $p(obj2).keys(), [
   "b.e.2",
   "b.e.3"
 ]);
-compareArrays(new $p(obj2).keys().map(k => new $p(obj2).get(k)), [
-  2,
-  3,
-  4,
-  5,
-  6,
-  7
-]);
+compareArrays(
+  new $p(obj2).keys().map(k => new $p(obj2).get(k)),
+  [2, 3, 4, 5, 6, 7]
+);
 
 let obj3 = {
   a: 2
@@ -167,12 +169,10 @@ compareArrays(new $p(obj7).keys(), [
   "d.3.2"
 ]);
 compareArrays(new $p(obj7).values(), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-compareArrays(new $p(obj7).filterKeys(i => i > 5), [
-  "d.2",
-  "d.3.0",
-  "d.3.1",
-  "d.3.2"
-]);
+compareArrays(
+  new $p(obj7).filterKeys(i => i > 5),
+  ["d.2", "d.3.0", "d.3.1", "d.3.2"]
+);
 
 let objToFlatten = {
   a: 1,
@@ -279,7 +279,10 @@ let obj10 = {
   c: [0, 10, 0, 0]
 };
 
-compare(new $p(obj10).findKey(i => i == 10), "c.1");
+compare(
+  new $p(obj10).findKey(i => i == 10),
+  "c.1"
+);
 
 let obj11 = {
   a: 2,
@@ -452,7 +455,10 @@ compare(
 
 compare(new $p([1, 2, 3, 4]).get([1]), 2);
 
-compareArrays(new $p([1, 2, 3, 4]).map(i => i * i), [1, 4, 9, 16]);
+compareArrays(
+  new $p([1, 2, 3, 4]).map(i => i * i),
+  [1, 4, 9, 16]
+);
 compare(
   new $p(
     new $p({
@@ -857,3 +863,55 @@ compare(
   compare(obj22.a.c, 2);
   compare(obj22.d, 4);
 }
+
+// Validation Default
+
+const obj23 = {
+  a: 2
+};
+
+$p.from(obj23).validate([
+  {
+    key: "a",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "b",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "c",
+    optional: true
+  }
+]);
+
+compare(obj23.a, 2);
+compare(obj23.b, 3);
+compare(obj23.c, undefined);
+
+const obj24 = {
+  a: 2
+};
+
+$p.from(obj24).validate([
+  {
+    key: "a",
+    optional: true,
+    default: 3
+  },
+  {
+    key: "b",
+    optional: true,
+    default: () => 5
+  },
+  {
+    key: "c",
+    optional: true
+  }
+]);
+
+compare(obj24.a, 2);
+compare(obj24.b, 5);
+compare(obj24.c, undefined);
