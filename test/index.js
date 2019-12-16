@@ -284,175 +284,6 @@ compare(
   "c.1"
 );
 
-let obj11 = {
-  a: 2,
-  b: "string",
-  c: {
-    d: [1, 2, 3, 4],
-    e: {
-      f: 2
-    }
-  }
-};
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "a"
-    },
-    {
-      key: "b"
-    },
-    {
-      key: "c"
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "a"
-    },
-    {
-      key: "b"
-    },
-    {
-      key: "f.d.e",
-      optional: true,
-      rules: [v => v == 47]
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "a",
-      rules: [v => v == 2]
-    },
-    {
-      key: "b",
-      rules: [v => typeof v === "string", v => v.length > 0]
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "a",
-      rules: [v => v == 2]
-    },
-    {
-      key: "b",
-      rules: [v => typeof v === "string", v => v.length > 10]
-    }
-  ]),
-  false
-);
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "a",
-      rules: v => v == 2
-    },
-    {
-      key: "c.d",
-      rules: v => v.length == 4
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p(obj11).validate([
-    {
-      key: "c.e.f",
-      rules: v => v > 10
-    },
-    {
-      key: "c.d",
-      rules: v => v.length == 4
-    }
-  ]),
-  false
-);
-
-let obj12 = {
-  a: 2,
-  b: 3,
-  c: 4,
-  d: 5
-};
-
-compare(
-  new $p(obj12).validate([
-    {
-      key: "*",
-      rules: [v => v < 10]
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p(obj12).validate([
-    {
-      key: "*",
-      rules: v => v > 5
-    }
-  ]),
-  false
-);
-
-compare(
-  new $p([]).validate([
-    {
-      key: "*",
-      optional: true,
-      rules: [v => v > 5]
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p([4, 3, 7]).validate([
-    {
-      key: "*",
-      optional: true,
-      rules: [v => v > 5]
-    }
-  ]),
-  false
-);
-
-compare(
-  new $p([7, 8, 9]).validate([
-    {
-      key: "*",
-      optional: true,
-      rules: [v => v > 5]
-    }
-  ]),
-  true
-);
-
-compare(
-  new $p([1, 2, 3, 4]).validate([
-    {
-      key: "*",
-      rules: [v => v < 4]
-    }
-  ]),
-  false
-);
-
 compare(new $p([1, 2, 3, 4]).get([1]), 2);
 
 compareArrays(
@@ -508,102 +339,9 @@ let obj13 = {
   }
 };
 
+compareArrays(new $p(obj13).innerNodes(), ["a", "c", "c.d"]);
+
 compare(new $p(obj13).equal(new $p(obj13).copy()), true);
-
-let obj14 = {
-  a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-};
-
-compare(
-  new $p(obj14).validate([
-    {
-      key: "a",
-      rules: [
-        v => Array.isArray(v),
-        v => (v.length > 5 ? "Array too long!" : true)
-      ]
-    }
-  ]),
-  "Array too long!"
-);
-
-let obj15 = {
-  password: "   secretPassword   "
-};
-
-compare(
-  new $p(obj15).validate([
-    {
-      key: "password",
-      preTransform: [v => v.trim()],
-      rules: [v => v === "secretPassword"],
-      postTransform: [v => "0petkaoi4tjou4jt4"]
-    }
-  ]),
-  true
-);
-
-compare(obj15.password, "0petkaoi4tjou4jt4");
-
-let obj16 = {
-  a: 5,
-  b: 5
-};
-
-compare(
-  new $p(obj16).validate([
-    {
-      key: "a",
-      rules: [(v, obj) => v === obj.b]
-    }
-  ]),
-  true
-);
-
-let obj17 = {
-  a: 5,
-  b: 6
-};
-
-compare(
-  new $p(obj17).validate([
-    {
-      key: "a",
-      rules: [(v, obj) => v === obj.b]
-    }
-  ]),
-  false
-);
-
-compare(
-  new $p(obj17).validate([
-    {
-      key: "c",
-      optional: true,
-      rules: [v => v > 0]
-    },
-    {
-      key: "b",
-      rules: [v => typeof b == "string"]
-    }
-  ]),
-  false
-);
-
-compare(
-  new $p(obj17).validate([
-    {
-      key: "b",
-      rules: [v => typeof b == "string"]
-    },
-    {
-      key: "c",
-      optional: true,
-      rules: [v => v > 0]
-    }
-  ]),
-  false
-);
 
 compare(
   $p
@@ -671,20 +409,6 @@ compareArrays(
     .keys(),
   ["a", "b.c"]
 );
-
-compare(
-  new $p({ password: "secretPassword    " }).validate([
-    {
-      key: "password",
-      preTransform: v => v.trim(),
-      rules: [v => v === "secretPassword"],
-      postTransform: v => "0petkaoi4tjou4jt4"
-    }
-  ]),
-  true
-);
-
-compare(obj15.password, "0petkaoi4tjou4jt4");
 
 const obj18 = {
   a: 2,
@@ -864,54 +588,22 @@ compare(
   compare(obj22.d, 4);
 }
 
-// Validation Default
-
-const obj23 = {
-  a: 2
+const obj25 = {
+  a: {
+    b: "abc",
+    c: "def"
+  },
+  b: {
+    a: "asd",
+    b: "des",
+    c: {
+      e: 2,
+      f: 4
+    }
+  },
+  c: "asd"
 };
 
-$p.from(obj23).validate([
-  {
-    key: "a",
-    optional: true,
-    default: 3
-  },
-  {
-    key: "b",
-    optional: true,
-    default: 3
-  },
-  {
-    key: "c",
-    optional: true
-  }
-]);
-
-compare(obj23.a, 2);
-compare(obj23.b, 3);
-compare(obj23.c, undefined);
-
-const obj24 = {
-  a: 2
-};
-
-$p.from(obj24).validate([
-  {
-    key: "a",
-    optional: true,
-    default: 3
-  },
-  {
-    key: "b",
-    optional: true,
-    default: () => 5
-  },
-  {
-    key: "c",
-    optional: true
-  }
-]);
-
-compare(obj24.a, 2);
-compare(obj24.b, 5);
-compare(obj24.c, undefined);
+compare($p.from(obj25).wildcard("a.*").length, 2);
+compare($p.from(obj25).wildcard("b.*").length, 4);
+compare($p.from(obj25).wildcard("d.*").length, 0);

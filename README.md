@@ -2,9 +2,9 @@
 
 # ptree
 
-Deep object walking, manipulation and validation
+Deep object walking & manipulation
 
-This package wraps regular Objects and Arrays, providing more functionality for accessing, manipulating and validating deep object/array integrity.
+This package wraps regular Objects and Arrays, providing more functionality for accessing & manipulating deep objects.
 
 # Install
 
@@ -39,6 +39,7 @@ const root = new ptree([1, 2, 3]);
 Get the value at given key.
 Key can be a dot-separated string, or an array containing single key segments as strings, numbers or functions.
 If a non-existing key is accessed (see example 3), undefined is returned.
+If no argument is passed, the root object is returned (same as getRoot()).
 
 ```javascript
 const root = new ptree({ a: 2, b: 3 });
@@ -172,125 +173,6 @@ console.log(root.map(v => v * v)); // -> { a: 25, b: { c: 49, d: 64, e: 81 } }
 console.log(root.map(v => v.toString())); // -> { a: '5', b: { c: '7', d: '8', e: '9' } }
 ```
 
-# validate
-
-Checks the integrity of the root object.
-This is done by defining rules for each key you want to check.
-
-```javascript
-const root = new ptree([1, 2, 3]);
-
-// Check if keys are defined
-// this returns false, because the array is only length 3.
-console.log(
-  root.validate([
-    {
-      key: "0"
-    },
-    {
-      key: "1"
-    },
-    {
-      key: "2"
-    },
-    {
-      key: "3"
-    }
-  ])
-); // -> false
-
-// Like above, but this time index 3 is optional
-console.log(
-  root.validate([
-    {
-      key: "0"
-    },
-    {
-      key: "1"
-    },
-    {
-      key: "2"
-    },
-    {
-      key: "3",
-      optional: true
-    }
-  ])
-); // -> true
-
-// Check for equality at given keys
-console.log(
-  root.validate([
-    {
-      key: "0",
-      rules: [v => v === 1]
-    },
-    {
-      key: "1",
-      rules: [v => v === 2]
-    }
-  ])
-); // -> true
-
-// Wildcard
-console.log(
-  root.validate([
-    {
-      key: "*",
-      rules: [v => typeof v === "number"]
-    }
-  ])
-); // -> true
-
-// Error message
-const root = new ptree({
-  a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-});
-
-console.log(
-  root.validate([
-    {
-      key: "a",
-      rules: [
-        v => Array.isArray(v),
-        v => (v.length > 5 ? "Array too long!" : true)
-      ]
-    }
-  ])
-); // -> "Array too long!"
-
-// Using (pre/post) transforms, you can alter the object before or after applying your rules; this alters the original object!
-// Trim all strings before checking rules
-const tree = new ptree({
-  a: " string",
-  b: ["  not trimmed  "]
-});
-
-tree.validate([
-  {
-    key: "*",
-    preTransform: [v => v.trim()],
-    rules: [v => true]
-    // postTransform: [
-    // ]
-  }
-]);
-
-console.log(tree.root); // -> { a: 'string', b: [ 'not trimmed' ] }
-
-// Access the original object in rules (or transforms)
-const root = new ptree({ a: 5, b: 5 });
-
-console.log(
-  root.validate([
-    {
-      key: "a",
-      rules: [(v, obj) => v === obj.b]
-    }
-  ])
-);
-```
-
 # copy
 
 Deep-copies the root object/array.
@@ -328,3 +210,40 @@ new ptree({
   b: 3
 }).includes(5); // -> false
 ```
+
+# Remove
+
+Removes a property from an object
+
+```javascript
+const obj = {
+  a: {
+    b: 2,
+    c: {
+      d: 3,
+      e: 5,
+      f: [1, 2, 3]
+    }
+  }
+};
+
+console.log(obj.a.b); // -> 2
+new ptree(obj).remove("a.b");
+console.log(obj.a.b); // -> undefined
+```
+
+# Pick
+
+Returns a new object only with the given keys
+
+# every/all
+
+Same as Array.prototype.every, but deep.
+
+# some/any
+
+Same as Array.prototype.some, but deep.
+
+# Merge
+
+Same as Object.assign(), but deep. Second argument controls if existing keys should be overwritten (default: true, like Object.assign()).

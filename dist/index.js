@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const globObject = require("glob-object");
 function getSegments(path) {
     let segments = [];
     if (typeof path === "string") {
@@ -55,6 +56,38 @@ class PTree {
             }
         }
         return obj;
+    }
+    wildcard(pattern) {
+        const globbed = globObject(pattern, this.root);
+        return new PTree(globbed).keys();
+    }
+    innerNodes(prev) {
+        let keys = [];
+        if (!Array.isArray(this.root)) {
+            let props = Object.keys(this.root);
+            props.forEach(key => {
+                const v = this.root[key];
+                if (typeof v === "object" && v !== null) {
+                    keys.push(key);
+                    keys.push(...new PTree(v).innerNodes(key));
+                }
+            });
+        }
+        else if (Array.isArray(this.root)) {
+            this.root.forEach((v, i) => {
+                if (typeof v === "object" && v !== null) {
+                    keys.push(i.toString());
+                    keys.push(...new PTree(v).innerNodes(i.toString()));
+                }
+            });
+        }
+        else {
+            throw `Tried to get keys of atomic value`;
+        }
+        if (prev !== undefined) {
+            keys = keys.map(k => `${prev}.${k}`);
+        }
+        return keys;
     }
     keys(prev) {
         let keys = [];
@@ -195,71 +228,6 @@ class PTree {
             p.set(key, mapper(this.get(key), key, this.root));
         });
         return mapped;
-    }
-    validate(props) {
-        for (const prop of props) {
-            if (!prop.key) {
-                throw "PTree: Invalid key in validation function";
-            }
-            if (prop.key === "*") {
-                props.push(...this.keys().map(key => {
-                    return {
-                        key,
-                        optional: prop.optional,
-                        rules: prop.rules,
-                        preTransform: prop.preTransform,
-                        postTransform: prop.postTransform
-                    };
-                }));
-                continue;
-            }
-            let value = this.get(prop.key);
-            if (value === undefined && !prop.optional) {
-                return false;
-            }
-            if (value === undefined && prop.optional) {
-                if (prop.default !== undefined) {
-                    if (typeof prop.default == "function")
-                        this.set(prop.key, prop.default(this.root));
-                    else
-                        this.set(prop.key, prop.default);
-                }
-                continue;
-            }
-            if (prop.preTransform) {
-                if (Array.isArray(prop.preTransform))
-                    for (const transformer of prop.preTransform) {
-                        this.set(prop.key, transformer(value, this.root));
-                    }
-                else
-                    this.set(prop.key, prop.preTransform(value, this.root));
-                value = this.get(prop.key);
-            }
-            if (prop.rules) {
-                if (Array.isArray(prop.rules)) {
-                    for (const rule of prop.rules) {
-                        const result = rule(value, this.root);
-                        if (result === true)
-                            continue;
-                        return result;
-                    }
-                }
-                else {
-                    const result = prop.rules(value, this.root);
-                    if (!result)
-                        return result;
-                }
-            }
-            if (prop.postTransform) {
-                if (Array.isArray(prop.postTransform))
-                    for (const transformer of prop.postTransform) {
-                        this.set(prop.key, transformer(value, this.root));
-                    }
-                else
-                    this.set(prop.key, prop.postTransform(value, this.root));
-            }
-        }
-        return true;
     }
     copy() {
         return JSON.parse(JSON.stringify(this.root));
