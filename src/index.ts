@@ -1,17 +1,6 @@
+const pm = require("picomatch");
+
 export type Key = string | number | (() => string | number);
-
-export type DefaultFunction = (root: object) => any;
-export type TransformFunction = (val: any, root: object) => any;
-export type Rule = (val: any, root: object) => boolean | string;
-
-export type ValidationProp = {
-  key: Key;
-  optional?: boolean;
-  default?: any | DefaultFunction;
-  rules?: Rule | Rule[];
-  preTransform?: TransformFunction | TransformFunction[];
-  postTransform?: TransformFunction | TransformFunction[];
-};
 
 function getSegments(path: Key | Key[]): (string | number)[] {
   let segments = [];
@@ -83,6 +72,42 @@ export default class PTree {
     }
 
     return obj;
+  }
+
+  public wildcard(pattern: string) {
+    const isMatch = pm(pattern.replace(/[.]/g, "/"));
+    return this.keys().filter(key => isMatch(key.replace(/[.]/g, "/")));
+  }
+
+  public innerNodes(prev?: string): string[] {
+    let keys = [] as string[];
+
+    if (!Array.isArray(this.root)) {
+      let props = Object.keys(this.root);
+
+      props.forEach(key => {
+        const v = (<any>this.root)[key];
+        if (typeof v === "object" && v !== null) {
+          keys.push(key);
+          keys.push(...new PTree(v).innerNodes(key));
+        }
+      });
+    } else if (Array.isArray(this.root)) {
+      this.root.forEach((v, i) => {
+        if (typeof v === "object" && v !== null) {
+          keys.push(i.toString());
+          keys.push(...new PTree(v).innerNodes(i.toString()));
+        }
+      });
+    } else {
+      throw `Tried to get keys of atomic value`;
+    }
+
+    if (prev !== undefined) {
+      keys = keys.map(k => `${prev}.${k}`);
+    }
+
+    return keys;
   }
 
   public keys(prev?: string): string[] {
@@ -249,77 +274,6 @@ export default class PTree {
     });
 
     return mapped;
-  }
-
-  public validate(props: ValidationProp[]): boolean | string {
-    for (const prop of props) {
-      if (!prop.key) {
-        throw "PTree: Invalid key in validation function";
-      }
-
-      if (prop.key === "*") {
-        props.push(
-          ...this.keys().map(key => {
-            return {
-              key,
-              optional: prop.optional,
-              rules: prop.rules,
-              preTransform: prop.preTransform,
-              postTransform: prop.postTransform
-            };
-          })
-        );
-        continue;
-      }
-
-      let value = this.get(prop.key);
-
-      if (value === undefined && !prop.optional) {
-        return false;
-      }
-
-      if (value === undefined && prop.optional) {
-        if (prop.default !== undefined) {
-          if (typeof prop.default == "function")
-            this.set(prop.key, prop.default(this.root));
-          else this.set(prop.key, prop.default);
-        }
-        continue;
-      }
-
-      if (prop.preTransform) {
-        if (Array.isArray(prop.preTransform))
-          for (const transformer of prop.preTransform) {
-            this.set(prop.key, transformer(value, this.root));
-          }
-        else this.set(prop.key, prop.preTransform(value, this.root));
-
-        value = this.get(prop.key);
-      }
-
-      if (prop.rules) {
-        if (Array.isArray(prop.rules)) {
-          for (const rule of prop.rules) {
-            const result = rule(value, this.root);
-            if (result === true) continue;
-            return result;
-          }
-        } else {
-          const result = prop.rules(value, this.root);
-          if (!result) return result;
-        }
-      }
-
-      if (prop.postTransform) {
-        if (Array.isArray(prop.postTransform))
-          for (const transformer of prop.postTransform) {
-            this.set(prop.key, transformer(value, this.root));
-          }
-        else this.set(prop.key, prop.postTransform(value, this.root));
-      }
-    }
-
-    return true;
   }
 
   public copy() {
