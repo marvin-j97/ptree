@@ -1,4 +1,4 @@
-const globObject = require("glob-object");
+const pm = require("picomatch");
 
 export type Key = string | number | (() => string | number);
 
@@ -75,8 +75,8 @@ export default class PTree {
   }
 
   public wildcard(pattern: string) {
-    const globbed = globObject(pattern, this.root);
-    return new PTree(globbed).keys();
+    const isMatch = pm(pattern.replace(/[.]/g, "/"));
+    return this.keys().filter(key => isMatch(key.replace(/[.]/g, "/")));
   }
 
   public innerNodes(prev?: string): string[] {

@@ -605,5 +605,5 @@ const obj25 = {
 };
 
 compare($p.from(obj25).wildcard("a.*").length, 2);
-compare($p.from(obj25).wildcard("b.*").length, 4);
+compare($p.from(obj25).wildcard("b.**").length, 4);
 compare($p.from(obj25).wildcard("d.*").length, 0);

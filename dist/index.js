@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const globObject = require("glob-object");
+const pm = require("picomatch");
 function getSegments(path) {
     let segments = [];
     if (typeof path === "string") {
@@ -58,8 +58,8 @@ class PTree {
         return obj;
     }
     wildcard(pattern) {
-        const globbed = globObject(pattern, this.root);
-        return new PTree(globbed).keys();
+        const isMatch = pm(pattern.replace(/[.]/g, "/"));
+        return this.keys().filter(key => isMatch(key.replace(/[.]/g, "/")));
     }
     innerNodes(prev) {
         let keys = [];
