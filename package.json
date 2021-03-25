@@ -9,11 +9,11 @@
     "test": "node test/"
   },
   "types": "dist/index.d.ts",
-  "author": "dotvirus",
+  "author": "marvin-j97",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dotvirus/ptree.ts.git"
+    "url": "https://github.com/marvin-j97/ptree.ts.git"
   },
   "files": [
     "dist/"
